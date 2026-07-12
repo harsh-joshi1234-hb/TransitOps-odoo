@@ -11,6 +11,7 @@ const expenseRoutes = require('./expense.routes');
 const dashboardRoutes = require('./dashboard.routes');
 const reportRoutes = require('./report.routes');
 const notificationRoutes = require('./notification.routes');
+const settingRoutes = require('./setting.routes');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('../config/swagger');
 
@@ -33,6 +34,7 @@ router.use('/expenses', expenseRoutes);
 router.use('/dashboard', dashboardRoutes);
 router.use('/reports', reportRoutes);
 router.use('/notifications', notificationRoutes);
+router.use('/settings', settingRoutes);
 
 module.exports = router;
 

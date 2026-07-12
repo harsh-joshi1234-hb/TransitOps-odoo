@@ -469,3 +469,39 @@ model Notification {
   @@index([priority])
   @@map("notifications")
 }
+
+enum SettingCategory {
+  GENERAL
+  COMPANY
+  TRIP
+  MAINTENANCE
+  FUEL
+  EXPENSE
+  NOTIFICATION
+  SECURITY
+  SYSTEM
+}
+
+enum SettingType {
+  STRING
+  NUMBER
+  BOOLEAN
+  JSON
+}
+
+model SystemSetting {
+  id          String          @id @default(uuid())
+  key         String          @unique
+  value       String
+  type        SettingType
+  category    SettingCategory
+  description String?
+  isEditable  Boolean         @default(true)
+
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([key])
+  @@index([category])
+  @@map("system_settings")
+}
