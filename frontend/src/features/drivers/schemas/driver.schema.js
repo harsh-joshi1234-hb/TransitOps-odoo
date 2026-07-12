@@ -7,6 +7,7 @@ export const driverSchema = z.object({
   licenseExpiry: z.string().min(1, 'License expiry is required'),
   email: z.string().email('Invalid email address'),
   contactNumber: z.string().min(1, 'Contact number is required'),
+  licenseCategory: z.string().min(1, 'License category is required'),
   address: z.string().optional(),
   status: z.enum(['AVAILABLE', 'ON_TRIP', 'ON_LEAVE', 'SUSPENDED']).optional(),
 });

@@ -57,3 +57,26 @@ export const useTransitionExpense = () => {
     }
   });
 };
+
+export const useFuelLogs = (params) => {
+  return useQuery({
+    queryKey: ['fuelLogs', params],
+    queryFn: async () => {
+      const response = await api.get('/fuel-logs', { params });
+      return response.data;
+    }
+  });
+};
+
+export const useCreateFuel = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data) => {
+      const response = await api.post('/fuel-logs', data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['fuelLogs'] });
+    }
+  });
+};

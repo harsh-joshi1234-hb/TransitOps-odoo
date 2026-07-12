@@ -12,11 +12,13 @@ import toast from 'react-hot-toast';
 const vehicleSchema = z.object({
   registrationNumber: z.string().min(2, 'Registration number is required'),
   name: z.string().min(2, 'Name is required'),
+  model: z.string().min(1, 'Model is required'),
   type: z.string().min(1, 'Type is required'),
   fuelType: z.string().min(1, 'Fuel type is required'),
   maxLoadCapacity: z.number().min(0, 'Must be positive'),
   fuelTankCapacity: z.number().min(0, 'Must be positive'),
-  currentOdometer: z.number().min(0, 'Must be positive'),
+  acquisitionCost: z.number().min(0, 'Must be positive'),
+  odometer: z.number().min(0, 'Must be positive'),
   status: z.string().optional()
 });
 
@@ -29,11 +31,13 @@ export default function VehicleFormDialog({ open, onClose, vehicle = null }) {
     defaultValues: {
       registrationNumber: '',
       name: '',
+      model: '',
       type: 'FLATBED',
       fuelType: 'DIESEL',
       maxLoadCapacity: 0,
       fuelTankCapacity: 0,
-      currentOdometer: 0,
+      acquisitionCost: 0,
+      odometer: 0,
       status: 'AVAILABLE'
     }
   });
@@ -43,22 +47,26 @@ export default function VehicleFormDialog({ open, onClose, vehicle = null }) {
       reset({
         registrationNumber: vehicle.registrationNumber,
         name: vehicle.name,
+        model: vehicle.model || '',
         type: vehicle.type,
         fuelType: vehicle.fuelType,
         maxLoadCapacity: vehicle.maxLoadCapacity || 0,
         fuelTankCapacity: vehicle.fuelTankCapacity || 0,
-        currentOdometer: vehicle.currentOdometer || 0,
+        acquisitionCost: vehicle.acquisitionCost || 0,
+        odometer: vehicle.odometer || 0,
         status: vehicle.status || 'AVAILABLE'
       });
     } else {
       reset({
         registrationNumber: '',
         name: '',
+        model: '',
         type: 'FLATBED',
         fuelType: 'DIESEL',
         maxLoadCapacity: 0,
         fuelTankCapacity: 0,
-        currentOdometer: 0,
+        acquisitionCost: 0,
+        odometer: 0,
         status: 'AVAILABLE'
       });
     }
@@ -67,7 +75,7 @@ export default function VehicleFormDialog({ open, onClose, vehicle = null }) {
   const onSubmit = async (data) => {
     try {
       if (vehicle) {
-        await updateMutation.mutateAsync({ id: vehicle.id, data: { name: data.name, status: data.status, currentOdometer: data.currentOdometer } });
+        await updateMutation.mutateAsync({ id: vehicle.id, data: { name: data.name, status: data.status, odometer: data.odometer } });
         toast.success('Vehicle updated successfully');
       } else {
         await createMutation.mutateAsync(data);
@@ -118,9 +126,11 @@ export default function VehicleFormDialog({ open, onClose, vehicle = null }) {
                   <Select {...field} fullWidth size="small" disabled={!!vehicle} sx={{ backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 2, color: '#fff' }}>
                     <MenuItem value="FLATBED">Flatbed</MenuItem>
                     <MenuItem value="REFRIGERATED">Refrigerated</MenuItem>
-                    <MenuItem value="TANKER">Tanker</MenuItem>
-                    <MenuItem value="DRY_VAN">Dry Van</MenuItem>
-                    <MenuItem value="BOX_TRUCK">Box Truck</MenuItem>
+                    <MenuItem value="TRUCK">Truck</MenuItem>
+                    <MenuItem value="VAN">Van</MenuItem>
+                    <MenuItem value="MINI_TRUCK">Mini Truck</MenuItem>
+                    <MenuItem value="BUS">Bus</MenuItem>
+                    <MenuItem value="OTHER">Other</MenuItem>
                   </Select>
                 )}
               />
@@ -165,12 +175,34 @@ export default function VehicleFormDialog({ open, onClose, vehicle = null }) {
           </Box>
           <Box sx={{ display: 'flex', gap: 2 }}>
             <Box sx={{ flex: 1 }}>
-              <Typography variant="caption" sx={{ color: '#888', fontWeight: 600, mb: 1, display: 'block' }}>Current Odometer</Typography>
+              <Typography variant="caption" sx={{ color: '#888', fontWeight: 600, mb: 1, display: 'block' }}>Model</Typography>
               <Controller
-                name="currentOdometer"
+                name="model"
                 control={control}
                 render={({ field }) => (
-                  <TextField {...field} type="number" onChange={(e) => field.onChange(parseFloat(e.target.value))} fullWidth size="small" error={!!errors.currentOdometer} helperText={errors.currentOdometer?.message} sx={{ '& .MuiOutlinedInput-root': { backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 2, color: '#fff' } }} />
+                  <TextField {...field} fullWidth size="small" disabled={!!vehicle} error={!!errors.model} helperText={errors.model?.message} sx={{ '& .MuiOutlinedInput-root': { backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 2, color: '#fff' } }} />
+                )}
+              />
+            </Box>
+            <Box sx={{ flex: 1 }}>
+              <Typography variant="caption" sx={{ color: '#888', fontWeight: 600, mb: 1, display: 'block' }}>Acquisition Cost ($)</Typography>
+              <Controller
+                name="acquisitionCost"
+                control={control}
+                render={({ field }) => (
+                  <TextField {...field} type="number" onChange={(e) => field.onChange(parseFloat(e.target.value))} fullWidth size="small" disabled={!!vehicle} error={!!errors.acquisitionCost} helperText={errors.acquisitionCost?.message} sx={{ '& .MuiOutlinedInput-root': { backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 2, color: '#fff' } }} />
+                )}
+              />
+            </Box>
+          </Box>
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Box sx={{ flex: 1 }}>
+              <Typography variant="caption" sx={{ color: '#888', fontWeight: 600, mb: 1, display: 'block' }}>Current Odometer</Typography>
+              <Controller
+                name="odometer"
+                control={control}
+                render={({ field }) => (
+                  <TextField {...field} type="number" onChange={(e) => field.onChange(parseFloat(e.target.value))} fullWidth size="small" error={!!errors.odometer} helperText={errors.odometer?.message} sx={{ '& .MuiOutlinedInput-root': { backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 2, color: '#fff' } }} />
                 )}
               />
             </Box>
@@ -184,8 +216,7 @@ export default function VehicleFormDialog({ open, onClose, vehicle = null }) {
                     <Select {...field} fullWidth size="small" sx={{ backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 2, color: '#fff' }}>
                       <MenuItem value="AVAILABLE">Available</MenuItem>
                       <MenuItem value="ON_TRIP">On Trip</MenuItem>
-                      <MenuItem value="MAINTENANCE">Maintenance</MenuItem>
-                      <MenuItem value="OUT_OF_SERVICE">Out of Service</MenuItem>
+                      <MenuItem value="IN_SHOP">In Shop (Maintenance)</MenuItem>
                       <MenuItem value="RETIRED">Retired</MenuItem>
                     </Select>
                   )}

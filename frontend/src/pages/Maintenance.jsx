@@ -31,7 +31,7 @@ export default function Maintenance() {
 
   const transitionMutation = useTransitionMaintenance();
 
-  const records = maintenanceRes?.data?.maintenanceLogs || maintenanceRes?.data?.items || Array.isArray(maintenanceRes?.data) ? maintenanceRes?.data : [];
+  const records = maintenanceRes?.data?.maintenanceLogs || maintenanceRes?.data?.items || (Array.isArray(maintenanceRes?.data) ? maintenanceRes?.data : []);
   
   // Calculate KPIs
   const scheduled = records.filter(r => r.status === 'SCHEDULED' || r.status === 'IN_PROGRESS').length;

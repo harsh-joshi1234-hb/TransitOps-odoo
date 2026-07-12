@@ -18,6 +18,7 @@ export default function DriverFormDialog({ open, onClose, onSubmit, initialData,
       licenseExpiry: '',
       email: '',
       contactNumber: '',
+      licenseCategory: 'CDL-A',
       address: '',
       status: 'AVAILABLE'
     }
@@ -32,20 +33,30 @@ export default function DriverFormDialog({ open, onClose, onSubmit, initialData,
         licenseExpiry: initialData.licenseExpiry ? dayjs(initialData.licenseExpiry).format('YYYY-MM-DD') : '',
         email: initialData.email || '',
         contactNumber: initialData.contactNumber || '',
+        licenseCategory: initialData.licenseCategory || 'CDL-A',
         address: initialData.address || '',
         status: initialData.status || 'AVAILABLE'
       });
     } else {
       reset({
         firstName: '', lastName: '', licenseNumber: '', licenseExpiry: '', 
-        email: '', contactNumber: '', address: '', status: 'AVAILABLE'
+        email: '', contactNumber: '', licenseCategory: 'CDL-A', address: '', status: 'AVAILABLE'
       });
     }
   }, [initialData, reset, open]);
 
   const handleFormSubmit = (data) => {
-    // Convert to ISO string for backend
-    const submitData = { ...data, licenseExpiry: new Date(data.licenseExpiry).toISOString() };
+    // Convert to backend format
+    const submitData = { 
+      name: `${data.firstName} ${data.lastName}`.trim(),
+      licenseNumber: data.licenseNumber,
+      licenseCategory: data.licenseCategory,
+      licenseExpiryDate: new Date(data.licenseExpiry).toISOString(),
+      email: data.email,
+      contactNumber: data.contactNumber,
+      address: data.address,
+      status: data.status
+    };
     onSubmit(submitData);
   };
 
@@ -97,6 +108,15 @@ export default function DriverFormDialog({ open, onClose, onSubmit, initialData,
                 control={control}
                 render={({ field }) => (
                   <TextField {...field} label="License Number" fullWidth error={!!errors.licenseNumber} helperText={errors.licenseNumber?.message} />
+                )}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Controller
+                name="licenseCategory"
+                control={control}
+                render={({ field }) => (
+                  <TextField {...field} label="License Category" fullWidth error={!!errors.licenseCategory} helperText={errors.licenseCategory?.message} />
                 )}
               />
             </Grid>

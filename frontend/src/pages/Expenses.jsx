@@ -14,7 +14,8 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PendingIcon from '@mui/icons-material/Pending';
 import PaidIcon from '@mui/icons-material/Paid';
 import TimelineIcon from '@mui/icons-material/Timeline';
-import { useExpenses, useExpenseKPIs, useCreateExpense, useTransitionExpense } from '../features/expenses/api/useExpenses';
+import { useExpenses, useExpenseKPIs, useCreateExpense, useTransitionExpense, useFuelLogs, useCreateFuel } from '../features/expenses/api/useExpenses';
+import { useVehicles } from '../features/fleet/api/useVehicles';
 import { useDebounce } from '../hooks/useDebounce';
 import KpiCard from '../features/dashboard/components/KpiCard';
 
@@ -41,13 +42,23 @@ export default function Expenses() {
     search: debouncedSearch 
   });
   
+  const { data: fuelLogsRes, isLoading: loadingFuel } = useFuelLogs({
+    search: debouncedSearch
+  });
+
   const { data: kpisRes, isLoading: loadingKpis } = useExpenseKPIs();
 
   const expenses = expensesRes?.data?.expenses || [];
+  const fuelLogs = fuelLogsRes?.data?.fuelLogs || fuelLogsRes?.data?.items || (Array.isArray(fuelLogsRes?.data) ? fuelLogsRes?.data : []);
   const kpis = kpisRes?.data || null;
+
+  const { data: vehiclesRes } = useVehicles({});
+  const vehicles = vehiclesRes?.data?.vehicles || vehiclesRes?.data || (Array.isArray(vehiclesRes?.data) ? vehiclesRes?.data : []);
 
   // Form State
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showFuelModal, setShowFuelModal] = useState(false);
+
   const [formData, setFormData] = useState({
     type: 'FUEL',
     amount: '',
@@ -55,9 +66,41 @@ export default function Expenses() {
     vendor: '',
     receiptNumber: '',
     description: '',
+    vehicleId: '',
+  });
+
+  const [fuelData, setFuelData] = useState({
+    fuelType: 'DIESEL',
+    paymentMethod: 'CASH',
+    liters: '',
+    pricePerLiter: '',
+    odometer: '',
+    filledAt: new Date().toISOString().slice(0, 10),
+    vehicleId: '',
   });
 
   const createMutation = useCreateExpense();
+  const createFuelMutation = useCreateFuel();
+
+  const handleCreateFuel = async (e) => {
+    e.preventDefault();
+    try {
+      await createFuelMutation.mutateAsync({
+        ...fuelData,
+        liters: parseFloat(fuelData.liters),
+        pricePerLiter: parseFloat(fuelData.pricePerLiter),
+        odometer: parseInt(fuelData.odometer),
+        filledAt: new Date(fuelData.filledAt).toISOString(),
+      });
+      toast.success('Fuel log created successfully!');
+      setShowFuelModal(false);
+      setFuelData({
+        fuelType: 'DIESEL', paymentMethod: 'CASH', liters: '', pricePerLiter: '', odometer: '', filledAt: new Date().toISOString().slice(0, 10), vehicleId: ''
+      });
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to create fuel log.');
+    }
+  };
 
   const handleCreateExpense = async (e) => {
     e.preventDefault();
@@ -71,7 +114,7 @@ export default function Expenses() {
       setShowCreateModal(false);
       setFormData({
         type: 'FUEL', amount: '', date: new Date().toISOString().slice(0, 10),
-        vendor: '', receiptNumber: '', description: '',
+        vendor: '', receiptNumber: '', description: '', vehicleId: '',
       });
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to create expense claim.');
@@ -206,7 +249,7 @@ export default function Expenses() {
           <Box sx={{ flexGrow: 1 }} />
           
           <Box sx={{ display: 'flex', gap: 1.5, width: { xs: '100%', sm: 'auto' } }}>
-            <Button onClick={() => toast('Fuel logging module coming soon', { icon: '⛽' })} variant="outlined" color="primary" startIcon={<AddIcon />} sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600, flex: { xs: 1, sm: 'none' } }}>
+            <Button onClick={() => setShowFuelModal(true)} variant="outlined" color="primary" startIcon={<AddIcon />} sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600, flex: { xs: 1, sm: 'none' } }}>
               Add Fuel
             </Button>
             <Button onClick={() => setShowCreateModal(true)} variant="contained" color="primary" startIcon={<AddIcon />} sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600, flex: { xs: 1, sm: 'none' } }}>
@@ -233,11 +276,38 @@ export default function Expenses() {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  <TableRow>
-                    <TableCell colSpan={8} align="center" sx={{ py: 6, color: '#666', borderBottom: 'none' }}>
-                      No fuel logs available in this period.
-                    </TableCell>
-                  </TableRow>
+                  {loadingFuel ? (
+                    <TableRow>
+                      <TableCell colSpan={8} align="center" sx={{ py: 6, borderBottom: 'none' }}>
+                        <Skeleton variant="rectangular" width="100%" height={100} sx={{ bgcolor: 'rgba(255,255,255,0.05)', borderRadius: 2 }} />
+                      </TableCell>
+                    </TableRow>
+                  ) : fuelLogs.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={8} align="center" sx={{ py: 6, color: '#666', borderBottom: 'none' }}>
+                        No fuel logs available in this period.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    fuelLogs.map((log) => (
+                      <TableRow key={log.id} hover sx={{ '& td': { borderBottom: '1px solid rgba(255,255,255,0.04)' } }}>
+                        <TableCell sx={{ color: '#e0e0e0', fontWeight: 500 }}>{log.vehicle?.registrationNumber || log.vehicleId}</TableCell>
+                        <TableCell sx={{ color: '#aaa' }}>{log.driver?.name || 'N/A'}</TableCell>
+                        <TableCell sx={{ color: '#aaa' }}>{new Date(log.filledAt).toLocaleDateString()}</TableCell>
+                        <TableCell sx={{ color: '#fff', fontWeight: 600 }}>{log.liters} L</TableCell>
+                        <TableCell sx={{ color: '#e67e22', fontWeight: 600 }}>${(log.liters * log.pricePerLiter).toFixed(2)}</TableCell>
+                        <TableCell sx={{ color: '#aaa' }}>{log.odometer} km</TableCell>
+                        <TableCell>
+                          <Chip label={log.fuelType} size="small" sx={{ backgroundColor: 'rgba(255,255,255,0.08)', color: '#ccc', borderRadius: 1.5, fontSize: '0.7rem', fontWeight: 600 }} />
+                        </TableCell>
+                        <TableCell align="right">
+                          <IconButton size="small" sx={{ color: '#888' }}>
+                            <TimelineIcon fontSize="small" />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </TableContainer>
@@ -369,10 +439,151 @@ export default function Expenses() {
                 sx={{ '& .MuiOutlinedInput-root': { backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 2, color: '#fff' } }}
               />
             </Box>
+
+            <Box>
+              <Typography variant="caption" sx={{ color: '#888', fontWeight: 600, mb: 1, display: 'block' }}>Link to Vehicle (Required)</Typography>
+              <Select
+                fullWidth
+                required
+                size="small"
+                value={formData.vehicleId}
+                onChange={(e) => setFormData({ ...formData, vehicleId: e.target.value })}
+                sx={{ backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 2, color: '#fff' }}
+              >
+                <MenuItem value="">Select Vehicle</MenuItem>
+                {Array.isArray(vehicles) && vehicles.map((v) => (
+                  <MenuItem key={v.id} value={v.id}>{v.registrationNumber} - {v.name}</MenuItem>
+                ))}
+              </Select>
+            </Box>
           </DialogContent>
           <DialogActions sx={{ p: 2, pt: 1, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
             <Button onClick={() => setShowCreateModal(false)} sx={{ color: '#888', textTransform: 'none', fontWeight: 600 }}>Cancel</Button>
             <Button type="submit" variant="contained" sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}>Submit Claim</Button>
+          </DialogActions>
+        </form>
+      </Dialog>
+
+      {/* Create Fuel Dialog */}
+      <Dialog open={showFuelModal} onClose={() => setShowFuelModal(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 3, backgroundColor: '#1E293B', color: '#fff', backgroundImage: 'none' } }}>
+        <form onSubmit={handleCreateFuel}>
+          <DialogTitle sx={{ borderBottom: '1px solid rgba(255,255,255,0.1)', pb: 2 }}>
+            <Typography variant="h6" fontWeight="bold">New Fuel Log</Typography>
+          </DialogTitle>
+          <DialogContent sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <Box>
+              <Typography variant="caption" sx={{ color: '#888', fontWeight: 600, mb: 1, display: 'block' }}>Vehicle</Typography>
+              <Select
+                fullWidth
+                required
+                size="small"
+                value={fuelData.vehicleId}
+                onChange={(e) => setFuelData({ ...fuelData, vehicleId: e.target.value })}
+                sx={{ backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 2, color: '#fff' }}
+              >
+                <MenuItem value="">Select Vehicle</MenuItem>
+                {Array.isArray(vehicles) && vehicles.map((v) => (
+                  <MenuItem key={v.id} value={v.id}>{v.registrationNumber} - {v.name}</MenuItem>
+                ))}
+              </Select>
+            </Box>
+
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="caption" sx={{ color: '#888', fontWeight: 600, mb: 1, display: 'block' }}>Fuel Type</Typography>
+                <Select
+                  fullWidth
+                  required
+                  size="small"
+                  value={fuelData.fuelType}
+                  onChange={(e) => setFuelData({ ...fuelData, fuelType: e.target.value })}
+                  sx={{ backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 2, color: '#fff' }}
+                >
+                  <MenuItem value="DIESEL">Diesel</MenuItem>
+                  <MenuItem value="PETROL">Petrol</MenuItem>
+                  <MenuItem value="ELECTRIC">Electric</MenuItem>
+                  <MenuItem value="OTHER">Other</MenuItem>
+                </Select>
+              </Box>
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="caption" sx={{ color: '#888', fontWeight: 600, mb: 1, display: 'block' }}>Payment Method</Typography>
+                <Select
+                  fullWidth
+                  required
+                  size="small"
+                  value={fuelData.paymentMethod}
+                  onChange={(e) => setFuelData({ ...fuelData, paymentMethod: e.target.value })}
+                  sx={{ backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 2, color: '#fff' }}
+                >
+                  <MenuItem value="CASH">Cash</MenuItem>
+                  <MenuItem value="CORPORATE_CARD">Corporate Card</MenuItem>
+                  <MenuItem value="FUEL_CARD">Fuel Card</MenuItem>
+                </Select>
+              </Box>
+            </Box>
+
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="caption" sx={{ color: '#888', fontWeight: 600, mb: 1, display: 'block' }}>Liters / Volume</Typography>
+                <TextField
+                  fullWidth
+                  required
+                  type="number"
+                  inputProps={{ step: "0.1" }}
+                  size="small"
+                  placeholder="0.0"
+                  value={fuelData.liters}
+                  onChange={(e) => setFuelData({ ...fuelData, liters: e.target.value })}
+                  sx={{ '& .MuiOutlinedInput-root': { backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 2, color: '#fff' } }}
+                />
+              </Box>
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="caption" sx={{ color: '#888', fontWeight: 600, mb: 1, display: 'block' }}>Price per Liter ($)</Typography>
+                <TextField
+                  fullWidth
+                  required
+                  type="number"
+                  inputProps={{ step: "0.01" }}
+                  size="small"
+                  placeholder="0.00"
+                  value={fuelData.pricePerLiter}
+                  onChange={(e) => setFuelData({ ...fuelData, pricePerLiter: e.target.value })}
+                  sx={{ '& .MuiOutlinedInput-root': { backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 2, color: '#fff' } }}
+                />
+              </Box>
+            </Box>
+
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="caption" sx={{ color: '#888', fontWeight: 600, mb: 1, display: 'block' }}>Odometer Reading</Typography>
+                <TextField
+                  fullWidth
+                  required
+                  type="number"
+                  size="small"
+                  placeholder="0"
+                  value={fuelData.odometer}
+                  onChange={(e) => setFuelData({ ...fuelData, odometer: e.target.value })}
+                  sx={{ '& .MuiOutlinedInput-root': { backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 2, color: '#fff' } }}
+                />
+              </Box>
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="caption" sx={{ color: '#888', fontWeight: 600, mb: 1, display: 'block' }}>Date Filled</Typography>
+                <TextField
+                  fullWidth
+                  required
+                  type="date"
+                  size="small"
+                  value={fuelData.filledAt}
+                  onChange={(e) => setFuelData({ ...fuelData, filledAt: e.target.value })}
+                  sx={{ '& .MuiOutlinedInput-root': { backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 2, color: '#fff' } }}
+                />
+              </Box>
+            </Box>
+          </DialogContent>
+          <DialogActions sx={{ p: 2, pt: 1, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+            <Button onClick={() => setShowFuelModal(false)} sx={{ color: '#888', textTransform: 'none', fontWeight: 600 }}>Cancel</Button>
+            <Button type="submit" variant="contained" disabled={createFuelMutation.isPending} sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}>Save Log</Button>
           </DialogActions>
         </form>
       </Dialog>
