@@ -1,10 +1,21 @@
 import React from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { LogOut, User } from 'lucide-react';
-import Button from '../ui/Button';
 import { useNavigate } from 'react-router-dom';
+import { 
+  AppBar, 
+  Toolbar, 
+  IconButton, 
+  Typography, 
+  Button, 
+  Box, 
+  Chip, 
+  Avatar
+} from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
+import LogoutIcon from '@mui/icons-material/Logout';
+import DirectionsBusIcon from '@mui/icons-material/DirectionsBus';
 
-export default function Navbar() {
+export default function Navbar({ drawerWidth, handleDrawerToggle }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -14,29 +25,73 @@ export default function Navbar() {
   };
 
   return (
-    <header className="bg-white shadow h-16 flex items-center justify-between px-6 z-10">
-      <div className="flex items-center text-lg font-semibold text-gray-700">
-        TransitOps
-      </div>
-      <div className="flex items-center space-x-4">
-        {user && (
-          <div className="flex items-center space-x-2 text-sm text-gray-600 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-200">
-            <User size={16} />
-            <span className="font-medium">{user.firstName} {user.lastName}</span>
-            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full ml-2">
-              {user.role?.name || 'User'}
-            </span>
-          </div>
-        )}
-        <Button 
-          onClick={handleLogout}
-          variant="outline"
-          className="flex items-center space-x-2 text-sm text-gray-600 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors"
+    <AppBar
+      position="fixed"
+      sx={{
+        width: { sm: `calc(100% - ${drawerWidth}px)` },
+        ml: { sm: `${drawerWidth}px` },
+        backgroundColor: 'background.paper',
+        color: 'text.primary',
+        boxShadow: '0px 1px 4px rgba(0,0,0,0.05)',
+      }}
+    >
+      <Toolbar>
+        <IconButton
+          color="inherit"
+          aria-label="open drawer"
+          edge="start"
+          onClick={handleDrawerToggle}
+          sx={{ mr: 2, display: { sm: 'none' } }}
         >
-          <LogOut size={16} />
-          <span>Logout</span>
-        </Button>
-      </div>
-    </header>
+          <MenuIcon />
+        </IconButton>
+
+        {/* Mobile Logo */}
+        <Box sx={{ display: { xs: 'flex', sm: 'none' }, alignItems: 'center', flexGrow: 1 }}>
+          <DirectionsBusIcon color="primary" sx={{ mr: 1 }} />
+          <Typography variant="h6" noWrap component="div" fontWeight="bold">
+            TransitOps
+          </Typography>
+        </Box>
+
+        <Box sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' } }} />
+
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          {user && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.light', fontSize: '0.875rem' }}>
+                {user.firstName?.charAt(0)}{user.lastName?.charAt(0)}
+              </Avatar>
+              <Box sx={{ display: { xs: 'none', md: 'flex' }, flexDirection: 'column' }}>
+                <Typography variant="body2" fontWeight="bold">
+                  {user.firstName} {user.lastName}
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ mt: -0.5 }}>
+                  {user.role?.name || 'User'}
+                </Typography>
+              </Box>
+            </Box>
+          )}
+          
+          <Button 
+            color="error" 
+            variant="outlined" 
+            size="small"
+            onClick={handleLogout}
+            startIcon={<LogoutIcon />}
+            sx={{ display: { xs: 'none', sm: 'flex' } }}
+          >
+            Logout
+          </Button>
+          <IconButton 
+            color="error" 
+            onClick={handleLogout}
+            sx={{ display: { xs: 'flex', sm: 'none' } }}
+          >
+            <LogoutIcon />
+          </IconButton>
+        </Box>
+      </Toolbar>
+    </AppBar>
   );
 }

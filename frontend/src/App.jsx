@@ -1,6 +1,8 @@
 import React from 'react';
 import AppRoutes from './routes/AppRoutes';
-import { ThemeProvider } from './context/ThemeContext';
+import { ThemeProvider } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import theme from './theme';
 import { AuthProvider } from './context/AuthContext';
 import Toast from './components/common/Toast';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -17,7 +19,8 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
         <AuthProvider>
           <AppRoutes />
           <Toast />

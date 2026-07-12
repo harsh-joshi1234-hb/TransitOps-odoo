@@ -1,14 +1,14 @@
 import React from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import Button from '../components/ui/Button';
-import Input from '../components/ui/Input';
+import { TextField, Button, Box, Typography, Link, InputAdornment, IconButton, CircularProgress } from '@mui/material';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -18,9 +18,11 @@ const loginSchema = z.object({
 export default function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const [showPassword, setShowPassword] = React.useState(false);
   
-  const { register, handleSubmit, formState: { errors } } = useForm({
-    resolver: zodResolver(loginSchema)
+  const { control, handleSubmit, formState: { errors } } = useForm({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: '', password: '' }
   });
 
   const mutation = useMutation({
@@ -42,45 +44,69 @@ export default function Login() {
     mutation.mutate(data);
   };
 
+  const handleClickShowPassword = () => setShowPassword((show) => !show);
+
   return (
-    <div className="w-full">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Email address</label>
-          <div className="mt-1">
-            <Input 
-              type="email" 
-              autoComplete="email" 
-              {...register('email')}
-              className={`appearance-none block w-full px-3 py-2 border ${errors.email ? 'border-red-300' : 'border-gray-300'} rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
-            />
-            {errors.email && <p className="mt-2 text-sm text-red-600">{errors.email.message}</p>}
-          </div>
-        </div>
+    <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+      <Controller
+        name="email"
+        control={control}
+        render={({ field }) => (
+          <TextField
+            {...field}
+            label="Email Address"
+            variant="outlined"
+            fullWidth
+            autoComplete="email"
+            error={!!errors.email}
+            helperText={errors.email?.message}
+          />
+        )}
+      />
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Password</label>
-          <div className="mt-1">
-            <Input 
-              type="password" 
-              autoComplete="current-password" 
-              {...register('password')}
-              className={`appearance-none block w-full px-3 py-2 border ${errors.password ? 'border-red-300' : 'border-gray-300'} rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
-            />
-            {errors.password && <p className="mt-2 text-sm text-red-600">{errors.password.message}</p>}
-          </div>
-        </div>
+      <Controller
+        name="password"
+        control={control}
+        render={({ field }) => (
+          <TextField
+            {...field}
+            label="Password"
+            variant="outlined"
+            type={showPassword ? 'text' : 'password'}
+            fullWidth
+            autoComplete="current-password"
+            error={!!errors.password}
+            helperText={errors.password?.message}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton onClick={handleClickShowPassword} edge="end">
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
+        )}
+      />
 
-        <div>
-          <Button 
-            type="submit" 
-            disabled={mutation.isPending}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-          >
-            {mutation.isPending ? 'Signing in...' : 'Sign in'}
-          </Button>
-        </div>
-      </form>
-    </div>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <Link component={RouterLink} to="/forgot-password" variant="body2" underline="hover">
+          Forgot password?
+        </Link>
+      </Box>
+
+      <Button 
+        type="submit" 
+        variant="contained" 
+        color="primary" 
+        size="large"
+        fullWidth
+        disabled={mutation.isPending}
+        startIcon={mutation.isPending ? <CircularProgress size={20} color="inherit" /> : null}
+      >
+        {mutation.isPending ? 'Signing in...' : 'Sign In'}
+      </Button>
+    </Box>
   );
 }

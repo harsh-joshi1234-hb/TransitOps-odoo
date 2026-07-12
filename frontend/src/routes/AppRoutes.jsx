@@ -4,6 +4,8 @@ import MainLayout from '../layouts/MainLayout';
 import AuthLayout from '../layouts/AuthLayout';
 import Landing from '../pages/Landing';
 import Login from '../pages/Login';
+import ForgotPassword from '../pages/ForgotPassword';
+import ResetPassword from '../pages/ResetPassword';
 import Dashboard from '../pages/Dashboard';
 import Vehicles from '../pages/Vehicles';
 import Drivers from '../pages/Drivers';
@@ -13,6 +15,7 @@ import Fuel from '../pages/Fuel';
 import Expenses from '../pages/Expenses';
 import Reports from '../pages/Reports';
 import Settings from '../pages/Settings';
+import Unauthorized from '../pages/Unauthorized';
 import PageNotFound from '../components/common/PageNotFound';
 import { ProtectedRoute } from './ProtectedRoute';
 
@@ -22,6 +25,8 @@ export default function AppRoutes() { return (
       <Route path='/' element={<Landing />} />
       <Route element={<AuthLayout />}>
         <Route path='/login' element={<Login />} />
+        <Route path='/forgot-password' element={<ForgotPassword />} />
+        <Route path='/reset-password/:token' element={<ResetPassword />} />
       </Route>
       <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
         <Route path='/dashboard' element={<Dashboard />} />
@@ -33,6 +38,7 @@ export default function AppRoutes() { return (
         <Route path='/expenses' element={<Expenses />} />
         <Route path='/reports' element={<Reports />} />
         <Route path='/settings' element={<Settings />} />
+        <Route path='/unauthorized' element={<Unauthorized />} />
       </Route>
       <Route path='*' element={<PageNotFound />} />
     </Routes>
