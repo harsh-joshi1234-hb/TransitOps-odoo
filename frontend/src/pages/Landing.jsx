@@ -1,3 +1,91 @@
-﻿import React from 'react';
-import { Link } from 'react-router-dom';
-export default function Landing() { return <div className='min-h-screen bg-gradient-to-br from-blue-900 to-gray-900 flex flex-col items-center justify-center text-white'><h1 className='text-6xl font-extrabold mb-4 tracking-tight'>TransitOps</h1><p className='text-2xl mb-8 font-light text-blue-200'>Smart Transport Operations Platform</p><div className='bg-green-500 bg-opacity-20 border border-green-400 text-green-300 px-6 py-3 rounded-lg mb-8 shadow-lg'><p className='text-lg font-medium'>🚀 Project Initialized Successfully</p></div><div className='space-x-4'><Link to='/login' className='bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-full transition-all duration-300 shadow-lg hover:shadow-xl'>Login</Link><Link to='/dashboard' className='bg-transparent border-2 border-blue-400 hover:bg-blue-800 text-white font-bold py-3 px-8 rounded-full transition-all duration-300'>Dashboard Demo</Link></div></div>; }
+import React from 'react';
+import { Link as RouterLink } from 'react-router-dom';
+import { Box, Typography, Button, Container, Stack } from '@mui/material';
+
+export default function Landing() {
+  return (
+    <Box
+      sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#0d0d0d',
+        textAlign: 'center',
+        px: 3,
+      }}
+    >
+      <Container maxWidth="sm">
+        {/* Logo */}
+        <Box
+          sx={{
+            width: 64, height: 64, borderRadius: 3,
+            background: 'linear-gradient(135deg, #e67e22 0%, #d35400 100%)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: '2rem', fontWeight: 800, color: '#fff',
+            mx: 'auto', mb: 3,
+          }}
+        >
+          T
+        </Box>
+
+        <Typography variant="h2" sx={{ fontWeight: 800, color: '#e0e0e0', mb: 1, letterSpacing: '-0.03em' }}>
+          TransitOps
+        </Typography>
+        <Typography variant="h6" sx={{ color: '#888', fontWeight: 400, mb: 5 }}>
+          Smart Transport Operations Platform
+        </Typography>
+
+        <Box
+          sx={{
+            backgroundColor: 'rgba(46, 204, 113, 0.08)',
+            border: '1px solid rgba(46, 204, 113, 0.2)',
+            borderRadius: 2,
+            px: 3, py: 1.5,
+            mb: 5,
+          }}
+        >
+          <Typography variant="body1" sx={{ color: '#2ecc71', fontWeight: 500 }}>
+            🚀 Project Initialized Successfully
+          </Typography>
+        </Box>
+
+        <Stack direction="row" spacing={2} justifyContent="center">
+          <Button
+            component={RouterLink}
+            to="/login"
+            variant="contained"
+            size="large"
+            sx={{
+              borderRadius: 6,
+              px: 5, py: 1.5,
+              fontWeight: 700,
+            }}
+          >
+            Login
+          </Button>
+          <Button
+            component={RouterLink}
+            to="/dashboard"
+            variant="outlined"
+            size="large"
+            sx={{
+              borderRadius: 6,
+              px: 4, py: 1.5,
+              fontWeight: 600,
+              borderColor: 'rgba(255,255,255,0.15)',
+              color: '#e0e0e0',
+              '&:hover': {
+                borderColor: '#e67e22',
+                backgroundColor: 'rgba(230, 126, 34, 0.06)',
+              },
+            }}
+          >
+            Dashboard Demo
+          </Button>
+        </Stack>
+      </Container>
+    </Box>
+  );
+}

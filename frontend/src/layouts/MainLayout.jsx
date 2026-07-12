@@ -5,7 +5,7 @@ import Sidebar from '../components/common/Sidebar';
 import Navbar from '../components/common/Navbar';
 import ErrorBoundary from '../components/common/ErrorBoundary';
 
-const drawerWidth = 260;
+const drawerWidth = 240;
 
 export default function MainLayout() {
   const [mobileOpen, setMobileOpen] = React.useState(false);

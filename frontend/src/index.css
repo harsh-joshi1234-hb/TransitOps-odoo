@@ -1,10 +1,11 @@
-/* Material UI will handle global styles, but we can keep some resets here if needed */
+/* Global resets - MUI CssBaseline handles most dark theme styles */
 body {
   margin: 0;
-  font-family: 'Roboto', 'Inter', sans-serif;
+  font-family: 'Inter', 'Roboto', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #f4f6f8;
+  background-color: #0d0d0d;
+  color: #e0e0e0;
 }
 
 * {

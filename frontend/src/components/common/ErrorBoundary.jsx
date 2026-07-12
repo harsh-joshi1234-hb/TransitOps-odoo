@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Typography, Button } from '@mui/material';
-import { ErrorOutline } from '@mui/icons-material';
+import ReportProblemIcon from '@mui/icons-material/ReportProblem';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -25,7 +25,7 @@ class ErrorBoundary extends React.Component {
             justifyContent: 'center', height: '100%', minHeight: '400px', p: 3 
           }}
         >
-          <ErrorOutline color="error" sx={{ fontSize: 64, mb: 2 }} />
+          <ReportProblemIcon color="error" sx={{ fontSize: 64, mb: 2 }} />
           <Typography variant="h5" fontWeight="bold" gutterBottom>
             Something went wrong.
           </Typography>

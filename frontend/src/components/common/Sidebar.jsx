@@ -18,20 +18,18 @@ import PersonIcon from '@mui/icons-material/Person';
 import RouteIcon from '@mui/icons-material/Route';
 import BuildIcon from '@mui/icons-material/Build';
 import LocalGasStationIcon from '@mui/icons-material/LocalGasStation';
-import ReceiptIcon from '@mui/icons-material/Receipt';
 import AssessmentIcon from '@mui/icons-material/Assessment';
+import AnalyticsIcon from '@mui/icons-material/TrendingUp';
 import SettingsIcon from '@mui/icons-material/Settings';
-import DirectionsBusIcon from '@mui/icons-material/DirectionsBus';
 
 const menuItems = [
   { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard', roles: ['Admin', 'Fleet Manager', 'Dispatcher', 'Safety Officer', 'Financial Analyst'] },
-  { text: 'Vehicles', icon: <DirectionsCarIcon />, path: '/vehicles', roles: ['Admin', 'Fleet Manager', 'Dispatcher', 'Safety Officer', 'Financial Analyst'] },
+  { text: 'Fleet', icon: <DirectionsCarIcon />, path: '/vehicles', roles: ['Admin', 'Fleet Manager', 'Dispatcher', 'Safety Officer', 'Financial Analyst'] },
   { text: 'Drivers', icon: <PersonIcon />, path: '/drivers', roles: ['Admin', 'Fleet Manager', 'Dispatcher', 'Safety Officer'] },
   { text: 'Trips', icon: <RouteIcon />, path: '/trips', roles: ['Admin', 'Fleet Manager', 'Dispatcher'] },
   { text: 'Maintenance', icon: <BuildIcon />, path: '/maintenance', roles: ['Admin', 'Fleet Manager', 'Safety Officer'] },
-  { text: 'Fuel Logs', icon: <LocalGasStationIcon />, path: '/fuel', roles: ['Admin', 'Fleet Manager', 'Financial Analyst'] },
-  { text: 'Expenses', icon: <ReceiptIcon />, path: '/expenses', roles: ['Admin', 'Financial Analyst'] },
-  { text: 'Reports', icon: <AssessmentIcon />, path: '/reports', roles: ['Admin', 'Fleet Manager', 'Financial Analyst'] },
+  { text: 'Fuel & Expenses', icon: <LocalGasStationIcon />, path: '/expenses', roles: ['Admin', 'Fleet Manager', 'Financial Analyst'] },
+  { text: 'Analytics', icon: <AnalyticsIcon />, path: '/reports', roles: ['Admin', 'Fleet Manager', 'Financial Analyst'] },
   { text: 'Settings', icon: <SettingsIcon />, path: '/settings', roles: ['Admin'] },
 ];
 
@@ -39,18 +37,38 @@ export default function Sidebar({ drawerWidth, mobileOpen, handleDrawerToggle })
   const { user } = useAuth();
   const location = useLocation();
 
+  const drawerPaperSx = {
+    boxSizing: 'border-box',
+    width: drawerWidth,
+    backgroundColor: '#111122',
+    borderRight: '1px solid rgba(255, 255, 255, 0.06)',
+    backgroundImage: 'none',
+  };
+
   const drawer = (
-    <div>
-      <Box sx={{ display: 'flex', alignItems: 'center', p: 2, height: 64 }}>
-        <DirectionsBusIcon color="primary" sx={{ mr: 1, fontSize: 32 }} />
-        <Typography variant="h6" fontWeight="bold" color="primary">
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      {/* Brand */}
+      <Box sx={{ display: 'flex', alignItems: 'center', px: 2.5, py: 2.5, gap: 1.5 }}>
+        <Box
+          sx={{
+            width: 36, height: 36, borderRadius: 2,
+            background: 'linear-gradient(135deg, #e67e22 0%, #d35400 100%)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: '1.1rem', fontWeight: 800, color: '#fff',
+          }}
+        >
+          T
+        </Box>
+        <Typography variant="h6" fontWeight={700} sx={{ color: '#e0e0e0', letterSpacing: '-0.02em' }}>
           TransitOps
         </Typography>
       </Box>
-      <Divider />
-      <List sx={{ px: 2, py: 2 }}>
+
+      <Divider sx={{ borderColor: 'rgba(255,255,255,0.06)', mx: 2 }} />
+
+      {/* Navigation */}
+      <List sx={{ px: 1.5, py: 2, flexGrow: 1 }}>
         {menuItems.map((item) => {
-          // Role Based Filtering
           if (user && item.roles && !item.roles.includes(user.role?.name)) {
             return null;
           }
@@ -58,39 +76,53 @@ export default function Sidebar({ drawerWidth, mobileOpen, handleDrawerToggle })
           const isActive = location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
 
           return (
-            <ListItem key={item.text} disablePadding sx={{ mb: 1 }}>
+            <ListItem key={item.text} disablePadding sx={{ mb: 0.5 }}>
               <ListItemButton
                 component={NavLink}
                 to={item.path}
                 sx={{
                   borderRadius: 2,
-                  bgcolor: isActive ? 'primary.main' : 'transparent',
-                  color: isActive ? 'primary.contrastText' : 'text.primary',
+                  py: 1,
+                  px: 2,
+                  bgcolor: isActive ? 'rgba(230, 126, 34, 0.12)' : 'transparent',
+                  borderLeft: isActive ? '3px solid #e67e22' : '3px solid transparent',
+                  color: isActive ? '#e67e22' : '#9e9e9e',
                   '&:hover': {
-                    bgcolor: isActive ? 'primary.dark' : 'action.hover',
+                    bgcolor: isActive ? 'rgba(230, 126, 34, 0.16)' : 'rgba(255, 255, 255, 0.04)',
+                    color: isActive ? '#e67e22' : '#e0e0e0',
                   },
+                  transition: 'all 0.2s ease',
                 }}
               >
-                <ListItemIcon 
-                  sx={{ 
-                    minWidth: 40,
-                    color: isActive ? 'primary.contrastText' : 'text.secondary' 
+                <ListItemIcon
+                  sx={{
+                    minWidth: 36,
+                    color: isActive ? '#e67e22' : '#757575',
+                    transition: 'color 0.2s ease',
                   }}
                 >
                   {item.icon}
                 </ListItemIcon>
-                <ListItemText 
-                  primary={item.text} 
-                  primaryTypographyProps={{ 
-                    fontWeight: isActive ? 600 : 500 
-                  }} 
+                <ListItemText
+                  primary={item.text}
+                  primaryTypographyProps={{
+                    fontWeight: isActive ? 600 : 400,
+                    fontSize: '0.875rem',
+                  }}
                 />
               </ListItemButton>
             </ListItem>
           );
         })}
       </List>
-    </div>
+
+      {/* Footer */}
+      <Box sx={{ px: 2.5, py: 2, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <Typography variant="caption" sx={{ color: '#555', fontSize: '0.7rem' }}>
+          TRANSITOPS © 2026 · RBAC ERP
+        </Typography>
+      </Box>
+    </Box>
   );
 
   return (
@@ -103,18 +135,18 @@ export default function Sidebar({ drawerWidth, mobileOpen, handleDrawerToggle })
         ModalProps={{ keepMounted: true }}
         sx={{
           display: { xs: 'block', sm: 'none' },
-          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+          '& .MuiDrawer-paper': drawerPaperSx,
         }}
       >
         {drawer}
       </Drawer>
-      
+
       {/* Desktop Drawer */}
       <Drawer
         variant="permanent"
         sx={{
           display: { xs: 'none', sm: 'block' },
-          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth, borderRight: 'none', boxShadow: '2px 0 8px rgba(0,0,0,0.05)' },
+          '& .MuiDrawer-paper': drawerPaperSx,
         }}
         open
       >

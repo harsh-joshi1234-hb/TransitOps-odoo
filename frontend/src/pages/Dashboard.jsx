@@ -16,7 +16,7 @@ import {
   LineChart, Line, PieChart, Pie, Cell
 } from 'recharts';
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+const COLORS = ['#2ecc71', '#3498db', '#e67e22', '#e74c3c', '#9b59b6'];
 
 export default function Dashboard() {
   const { data: overviewData, isLoading: isOverviewLoading } = useDashboardOverview();
@@ -137,12 +137,12 @@ export default function Dashboard() {
                       data={chartsData?.expenses || []}
                       margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                     >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="date" />
-                      <YAxis />
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                      <XAxis dataKey="date" stroke="#666" tick={{ fill: '#999', fontSize: 12 }} />
+                      <YAxis stroke="#666" tick={{ fill: '#999', fontSize: 12 }} />
                       <RechartsTooltip />
                       <Legend />
-                      <Bar dataKey="amount" fill="#1976d2" name="Amount ($)" />
+                      <Bar dataKey="amount" fill="#3498db" name="Amount ($)" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </Box>
@@ -165,12 +165,12 @@ export default function Dashboard() {
                       data={chartsData?.trips || []}
                       margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                     >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="date" />
-                      <YAxis />
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                      <XAxis dataKey="date" stroke="#666" tick={{ fill: '#999', fontSize: 12 }} />
+                      <YAxis stroke="#666" tick={{ fill: '#999', fontSize: 12 }} />
                       <RechartsTooltip />
                       <Legend />
-                      <Line type="monotone" dataKey="count" stroke="#2e7d32" activeDot={{ r: 8 }} name="Completed Trips" />
+                      <Line type="monotone" dataKey="count" stroke="#2ecc71" strokeWidth={2} activeDot={{ r: 6, fill: '#2ecc71' }} name="Completed Trips" />
                     </LineChart>
                   </ResponsiveContainer>
                 </Box>

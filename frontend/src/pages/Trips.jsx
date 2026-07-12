@@ -247,7 +247,6 @@ export default function Trips() {
                         label={trip.status} 
                         color={getStatusColor(trip.status)} 
                         size="small" 
-                        variant="outlined" 
                       />
                     </TableCell>
                     <TableCell align="right">

@@ -110,7 +110,7 @@ export default function Drivers() {
       case 'AVAILABLE': return 'success';
       case 'ON_TRIP': return 'info';
       case 'ON_LEAVE': return 'warning';
-      case 'SUSPENDED': return 'error';
+      case 'SUSPENDED': return 'warning';
       default: return 'default';
     }
   };
@@ -219,7 +219,6 @@ export default function Drivers() {
                         label={driver.status} 
                         color={getStatusColor(driver.status)} 
                         size="small" 
-                        variant="outlined" 
                       />
                     </TableCell>
                     <TableCell>
