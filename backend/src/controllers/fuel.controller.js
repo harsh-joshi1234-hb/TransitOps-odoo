@@ -4,7 +4,7 @@ const asyncHandler = require('../utils/asyncHandler');
 
 class FuelController {
   createFuelLog = asyncHandler(async (req, res) => {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const fuelLog = await fuelService.createFuelLog(req.body, userId);
     res.status(201).json(new ApiResponse(201, fuelLog, 'Fuel log drafted successfully'));
   });
@@ -30,7 +30,7 @@ class FuelController {
   });
 
   approveFuelLog = asyncHandler(async (req, res) => {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const fuelLog = await fuelService.approveFuelLog(req.params.id, userId);
     res.status(200).json(new ApiResponse(200, fuelLog, 'Fuel log approved successfully'));
   });

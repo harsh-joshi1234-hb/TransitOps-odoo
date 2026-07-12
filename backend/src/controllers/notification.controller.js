@@ -5,18 +5,18 @@ const asyncHandler = require('../utils/asyncHandler');
 
 class NotificationController {
   getNotifications = asyncHandler(async (req, res) => {
-    const data = await notificationService.getNotifications(req.user.id, req.query);
+    const data = await notificationService.getNotifications(req.user.userId, req.query);
     res.status(200).json(new ApiResponse(200, data, 'Notifications retrieved successfully'));
   });
 
   getUnreadCount = asyncHandler(async (req, res) => {
-    const data = await notificationService.getUnreadCount(req.user.id);
+    const data = await notificationService.getUnreadCount(req.user.userId);
     res.status(200).json(new ApiResponse(200, data, 'Unread count retrieved successfully'));
   });
 
   markAsRead = asyncHandler(async (req, res) => {
     try {
-      await notificationService.markAsRead(req.params.id, req.user.id);
+      await notificationService.markAsRead(req.params.id, req.user.userId);
       res.status(200).json(new ApiResponse(200, null, 'Notification marked as read'));
     } catch (error) {
       throw new ApiError(404, error.message);
@@ -24,7 +24,7 @@ class NotificationController {
   });
 
   markAllAsRead = asyncHandler(async (req, res) => {
-    await notificationService.markAllAsRead(req.user.id);
+    await notificationService.markAllAsRead(req.user.userId);
     res.status(200).json(new ApiResponse(200, null, 'All notifications marked as read'));
   });
 

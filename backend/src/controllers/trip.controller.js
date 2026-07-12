@@ -4,7 +4,7 @@ const asyncHandler = require('../utils/asyncHandler');
 
 class TripController {
   createTrip = asyncHandler(async (req, res) => {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const trip = await tripService.createTrip(req.body, userId);
     res.status(201).json(new ApiResponse(201, trip, 'Trip created successfully'));
   });
@@ -36,7 +36,7 @@ class TripController {
 
   completeTrip = asyncHandler(async (req, res) => {
     const { actualDistance } = req.body;
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const trip = await tripService.completeTrip(req.params.id, actualDistance, userId);
     res.status(200).json(new ApiResponse(200, trip, 'Trip completed successfully'));
   });

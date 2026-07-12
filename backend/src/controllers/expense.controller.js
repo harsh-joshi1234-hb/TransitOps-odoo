@@ -4,7 +4,7 @@ const asyncHandler = require('../utils/asyncHandler');
 
 class ExpenseController {
   createExpense = asyncHandler(async (req, res) => {
-    const userId = req.user ? req.user.id : 'SYSTEM';
+    const userId = req.user ? req.user.userId : undefined;
     const expense = await expenseService.createExpense(req.body, userId);
     res.status(201).json(new ApiResponse(201, expense, 'Expense drafted successfully'));
   });
@@ -40,7 +40,7 @@ class ExpenseController {
   });
 
   approveExpense = asyncHandler(async (req, res) => {
-    const userId = req.user ? req.user.id : 'SYSTEM';
+    const userId = req.user ? req.user.userId : undefined;
     const expense = await expenseService.approveExpense(req.params.id, userId);
     res.status(200).json(new ApiResponse(200, expense, 'Expense approved successfully'));
   });
@@ -52,19 +52,19 @@ class ExpenseController {
   });
 
   queuePendingPayment = asyncHandler(async (req, res) => {
-    const userId = req.user ? req.user.id : 'SYSTEM';
+    const userId = req.user ? req.user.userId : undefined;
     const expense = await expenseService.transitionPaymentState(req.params.id, 'PENDING_PAYMENT', userId);
     res.status(200).json(new ApiResponse(200, expense, 'Expense queued for pending payment successfully'));
   });
 
   markProcessingPayment = asyncHandler(async (req, res) => {
-    const userId = req.user ? req.user.id : 'SYSTEM';
+    const userId = req.user ? req.user.userId : undefined;
     const expense = await expenseService.transitionPaymentState(req.params.id, 'PROCESSING_PAYMENT', userId);
     res.status(200).json(new ApiResponse(200, expense, 'Expense marked as processing payment successfully'));
   });
 
   markPaid = asyncHandler(async (req, res) => {
-    const userId = req.user ? req.user.id : 'SYSTEM';
+    const userId = req.user ? req.user.userId : undefined;
     const { paymentReference } = req.body;
     const expense = await expenseService.transitionPaymentState(req.params.id, 'PAID', userId, paymentReference);
     res.status(200).json(new ApiResponse(200, expense, 'Expense marked as paid successfully'));

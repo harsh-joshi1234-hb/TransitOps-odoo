@@ -4,7 +4,7 @@ const asyncHandler = require('../utils/asyncHandler');
 
 class MaintenanceController {
   createMaintenance = asyncHandler(async (req, res) => {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const maintenance = await maintenanceService.createMaintenance(req.body, userId);
     res.status(201).json(new ApiResponse(201, maintenance, 'Maintenance requested successfully'));
   });
@@ -25,7 +25,7 @@ class MaintenanceController {
   });
 
   scheduleMaintenance = asyncHandler(async (req, res) => {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const maintenance = await maintenanceService.scheduleMaintenance(req.params.id, req.body, userId);
     res.status(200).json(new ApiResponse(200, maintenance, 'Maintenance scheduled successfully'));
   });
@@ -38,13 +38,13 @@ class MaintenanceController {
 
   completeMaintenance = asyncHandler(async (req, res) => {
     const { actualCost, nextServiceDate } = req.body;
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const maintenance = await maintenanceService.completeMaintenance(req.params.id, actualCost, nextServiceDate, userId);
     res.status(200).json(new ApiResponse(200, maintenance, 'Maintenance completed successfully'));
   });
 
   cancelMaintenance = asyncHandler(async (req, res) => {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const maintenance = await maintenanceService.cancelMaintenance(req.params.id, userId);
     res.status(200).json(new ApiResponse(200, maintenance, 'Maintenance cancelled successfully'));
   });
