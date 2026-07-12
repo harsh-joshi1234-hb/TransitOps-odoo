@@ -76,6 +76,8 @@ async function main() {
     licenseCategory: 'CE',
     licenseExpiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + 2)), // 2 years from now
     contactNumber: `+1-555-010${i}`,
+    email: `driver${i + 1}@transitops.com`,
+    address: `${100 + i} Logistics Way, Transit City`,
     safetyScore: 95.0 + (i % 5),
     status: 'AVAILABLE',
   }));
@@ -92,16 +94,24 @@ async function main() {
 
   // 5. Trips (20 Trips)
   const createdTrips = [];
+  const adminId = usersData[0] ? (await prisma.user.findUnique({ where: { email: usersData[0].email } })).id : null;
+  const todayStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  
   for (let i = 0; i < 20; i++) {
     const v = createdVehicles[i % 10];
     const d = createdDrivers[i % 8];
     const trip = await prisma.trip.create({
       data: {
+        tripNumber: `TRP-${todayStr}-${String(i + 1).padStart(4, '0')}`,
         source: `City ${i}`,
         destination: `City ${i + 1}`,
         cargoWeight: v.maxLoadCapacity - 1000,
         plannedDistance: 150 + (i * 10),
         status: i < 5 ? 'COMPLETED' : 'DRAFT',
+        priority: i % 4 === 0 ? 'HIGH' : 'NORMAL',
+        plannedStartTime: new Date(),
+        plannedEndTime: new Date(new Date().setDate(new Date().getDate() + 2)),
+        createdByUserId: adminId,
         vehicleId: v.id,
         driverId: d.id,
       },

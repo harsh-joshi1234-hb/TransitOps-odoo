@@ -27,9 +27,18 @@ enum DriverStatus {
 
 enum TripStatus {
   DRAFT
+  READY
   DISPATCHED
+  IN_PROGRESS
   COMPLETED
   CANCELLED
+}
+
+enum TripPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
 }
 
 enum MaintenanceStatus {
@@ -88,6 +97,8 @@ model User {
   // Relations
   roleId    String
   role      Role     @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  tripsCreated   Trip[] @relation("TripCreatedBy")
+  tripsCompleted Trip[] @relation("TripCompletedBy")
 
   // Audit
   createdAt DateTime @default(now())
@@ -133,7 +144,9 @@ model Driver {
   licenseNumber      String       @unique
   licenseCategory    String
   licenseExpiryDate  DateTime
-  contactNumber      String
+  contactNumber      String       @unique
+  email              String       @unique
+  address            String?
   safetyScore        Float        @default(100.0)
   status             DriverStatus @default(AVAILABLE)
 
@@ -154,11 +167,14 @@ model Driver {
 
 model Trip {
   id              String     @id @default(uuid())
+  tripNumber      String     @unique
   source          String
   destination     String
   cargoWeight     Float
   plannedDistance Float
   status          TripStatus @default(DRAFT)
+  priority        TripPriority @default(NORMAL)
+  remarks         String?
   
   // Relations
   vehicleId       String
@@ -170,9 +186,17 @@ model Trip {
   expenses        Expense[]
 
   // Realized Metrics
+  plannedStartTime DateTime?
+  plannedEndTime   DateTime?
   actualDistance  Float?
   startTime       DateTime?
   endTime         DateTime?
+
+  // Audit Relations
+  createdByUserId String?
+  createdByUser   User?      @relation("TripCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  completedByUserId String?
+  completedByUser   User?    @relation("TripCompletedBy", fields: [completedByUserId], references: [id], onDelete: SetNull)
 
   // Audit
   createdAt       DateTime   @default(now())
@@ -181,6 +205,7 @@ model Trip {
   @@index([status])
   @@index([vehicleId])
   @@index([driverId])
+  @@index([plannedStartTime])
   @@map("trips")
 }
 
