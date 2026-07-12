@@ -44,6 +44,8 @@ enum VehicleType {
   VAN
   REFRIGERATED
   FLATBED
+  MINI_TRUCK
+  BUS
   OTHER
 }
 

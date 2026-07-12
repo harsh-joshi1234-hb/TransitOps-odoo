@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const ApiResponse = require('../utils/apiResponse');
 const authRoutes = require('./auth.routes');
+const vehicleRoutes = require('./vehicle.routes');
 
 // Health Check
 router.get('/health', (req, res) => {
@@ -10,6 +11,6 @@ router.get('/health', (req, res) => {
 
 // Import and use other routes here
 router.use('/auth', authRoutes);
-// router.use('/vehicles', vehicleRoutes);
+router.use('/vehicles', vehicleRoutes);
 
 module.exports = router;

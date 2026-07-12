@@ -1,9 +1,9 @@
 const ApiError = require('../utils/apiError');
 
 const validateRegister = (req, res, next) => {
-  const { email, password, firstName, lastName, roleName } = req.body;
-  if (!email || !password || !firstName || !lastName || !roleName) {
-    return next(new ApiError(400, 'Missing required fields: email, password, firstName, lastName, roleName'));
+  const { email, password, firstName, lastName } = req.body;
+  if (!email || !password || !firstName || !lastName) {
+    return next(new ApiError(400, 'Missing required fields: email, password, firstName, lastName'));
   }
   
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -11,8 +11,9 @@ const validateRegister = (req, res, next) => {
     return next(new ApiError(400, 'Invalid email format'));
   }
 
-  if (password.length < 8) {
-    return next(new ApiError(400, 'Password must be at least 8 characters long'));
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+  if (!passwordRegex.test(password)) {
+    return next(new ApiError(400, 'Password must contain at least 8 characters, one uppercase, one lowercase, one number, and one special character'));
   }
 
   next();
@@ -31,8 +32,9 @@ const validateChangePassword = (req, res, next) => {
   if (!oldPassword || !newPassword) {
     return next(new ApiError(400, 'Missing required fields: oldPassword, newPassword'));
   }
-  if (newPassword.length < 8) {
-    return next(new ApiError(400, 'New password must be at least 8 characters long'));
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+  if (!passwordRegex.test(newPassword)) {
+    return next(new ApiError(400, 'New password must contain at least 8 characters, one uppercase, one lowercase, one number, and one special character'));
   }
   next();
 };

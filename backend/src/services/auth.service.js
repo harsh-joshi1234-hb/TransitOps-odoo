@@ -10,7 +10,9 @@ class AuthService {
   }
 
   async register(data) {
-    const { email, password, firstName, lastName, roleName } = data;
+    const { password, firstName, lastName } = data;
+    const email = data.email.trim().toLowerCase();
+    const roleName = 'Dispatcher';
 
     // Check if user already exists
     const existingUser = await userRepository.findUserByEmail(email);
@@ -21,7 +23,7 @@ class AuthService {
     // Check if role exists
     const role = await userRepository.findRoleByName(roleName);
     if (!role) {
-      throw new ApiError(400, `Role '${roleName}' does not exist`);
+      throw new ApiError(500, `Default role '${roleName}' does not exist in the system`);
     }
 
     // Hash password
@@ -42,7 +44,8 @@ class AuthService {
     return userWithoutPassword;
   }
 
-  async login(email, password) {
+  async login(rawEmail, password) {
+    const email = rawEmail.trim().toLowerCase();
     // Find user
     const user = await userRepository.findUserByEmail(email);
     if (!user) {
