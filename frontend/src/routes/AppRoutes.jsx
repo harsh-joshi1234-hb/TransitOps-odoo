@@ -1,5 +1,5 @@
 import React, { Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Box, CircularProgress } from '@mui/material';
 import MainLayout from '../layouts/MainLayout';
 import AuthLayout from '../layouts/AuthLayout';
@@ -7,7 +7,6 @@ import { ProtectedRoute } from './ProtectedRoute';
 import PageNotFound from '../components/common/PageNotFound';
 
 // Lazy loaded views
-const Landing = lazy(() => import('../pages/Landing'));
 const Login = lazy(() => import('../pages/Login'));
 const ForgotPassword = lazy(() => import('../pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('../pages/ResetPassword'));
@@ -32,7 +31,7 @@ export default function AppRoutes() { return (
   <Router>
     <Suspense fallback={<SuspenseLoader />}>
       <Routes>
-        <Route path='/' element={<Landing />} />
+        <Route path='/' element={<Navigate to="/login" replace />} />
       <Route element={<AuthLayout />}>
         <Route path='/login' element={<Login />} />
         <Route path='/forgot-password' element={<ForgotPassword />} />
