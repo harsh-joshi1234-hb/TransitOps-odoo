@@ -17,6 +17,7 @@ import {
   useUpdateSafetyScore, useDeleteDriver 
 } from '../features/drivers/api/useDrivers';
 import { useAuth } from '../context/AuthContext';
+import { useDebounce } from '../hooks/useDebounce';
 import DriverFormDialog from '../features/drivers/components/DriverFormDialog';
 import DriverScoreDialog from '../features/drivers/components/DriverScoreDialog';
 import { toast } from 'react-hot-toast';
@@ -32,6 +33,7 @@ export default function Drivers() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 300);
 
   // Dialog states
   const [formOpen, setFormOpen] = useState(false);
@@ -42,7 +44,7 @@ export default function Drivers() {
   const { data, isLoading } = useDrivers({ 
     page: page + 1, 
     limit: rowsPerPage, 
-    search: search 
+    search: debouncedSearch 
   });
 
   // Mutations

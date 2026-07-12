@@ -19,6 +19,7 @@ import {
   useStartTrip, useCompleteTrip, useCancelTrip 
 } from '../features/trips/api/useTrips';
 import { useAuth } from '../context/AuthContext';
+import { useDebounce } from '../hooks/useDebounce';
 import TripFormDialog from '../features/trips/components/TripFormDialog';
 import TripCompleteDialog from '../features/trips/components/TripCompleteDialog';
 import { toast } from 'react-hot-toast';
@@ -33,6 +34,7 @@ export default function Trips() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 300);
 
   // Dialog states
   const [formOpen, setFormOpen] = useState(false);
@@ -47,7 +49,7 @@ export default function Trips() {
   const { data, isLoading } = useTrips({ 
     page: page + 1, 
     limit: rowsPerPage, 
-    search: search 
+    search: debouncedSearch 
   });
 
   // Mutations

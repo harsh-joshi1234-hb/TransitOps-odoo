@@ -20,6 +20,7 @@ import {
   History
 } from 'lucide-react';
 import { useExpenses, useExpenseKPIs, useExpenseTimeline, useCreateExpense, useTransitionExpense } from '../features/expenses/api/useExpenses';
+import { useDebounce } from '../hooks/useDebounce';
 
 
 const STATUS_CONFIG = {
@@ -34,6 +35,7 @@ const STATUS_CONFIG = {
 
 export default function Expenses() {
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearch = useDebounce(searchQuery, 300);
   const [statusFilter, setStatusFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
 
@@ -56,7 +58,7 @@ export default function Expenses() {
   const { data: expensesRes, isLoading: loadingExpenses } = useExpenses({ 
     status: statusFilter, 
     type: typeFilter,
-    search: searchQuery 
+    search: debouncedSearch 
   });
   
   const { data: kpisRes, isLoading: loadingKpis } = useExpenseKPIs();
