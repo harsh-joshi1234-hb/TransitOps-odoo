@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import MainLayout from '../layouts/MainLayout';
 import AuthLayout from '../layouts/AuthLayout';
@@ -14,6 +14,7 @@ import Expenses from '../pages/Expenses';
 import Reports from '../pages/Reports';
 import Settings from '../pages/Settings';
 import PageNotFound from '../components/common/PageNotFound';
+import { ProtectedRoute } from './ProtectedRoute';
 
 export default function AppRoutes() { return (
   <Router>
@@ -22,7 +23,7 @@ export default function AppRoutes() { return (
       <Route element={<AuthLayout />}>
         <Route path='/login' element={<Login />} />
       </Route>
-      <Route element={<MainLayout />}>
+      <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
         <Route path='/dashboard' element={<Dashboard />} />
         <Route path='/vehicles' element={<Vehicles />} />
         <Route path='/drivers' element={<Drivers />} />
