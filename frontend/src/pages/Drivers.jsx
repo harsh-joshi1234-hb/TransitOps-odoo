@@ -186,14 +186,14 @@ export default function Drivers() {
                     <TableCell><Skeleton animation="wave" /></TableCell>
                   </TableRow>
                 ))
-              ) : data?.data?.length === 0 ? (
+              ) : data?.data?.drivers?.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
                     No drivers found.
                   </TableCell>
                 </TableRow>
               ) : (
-                data?.data?.map((driver) => (
+                data?.data?.drivers?.map((driver) => (
                   <TableRow key={driver.id} hover>
                     <TableCell>
                       <Typography variant="body2" fontWeight="bold">

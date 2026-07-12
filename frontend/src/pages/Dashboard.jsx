@@ -33,7 +33,7 @@ export default function Dashboard() {
         <Grid item xs={12} sm={6} md={4} lg={2}>
           <KpiCard 
             title="Total Vehicles" 
-            value={overviewData?.fleet?.totalVehicles || 0} 
+            value={overviewData?.vehicles?.totalVehicles || 0} 
             icon={<DirectionsCarIcon />} 
             color="primary"
             isLoading={isOverviewLoading}
@@ -42,7 +42,7 @@ export default function Dashboard() {
         <Grid item xs={12} sm={6} md={4} lg={2}>
           <KpiCard 
             title="Active Drivers" 
-            value={overviewData?.drivers?.activeDrivers || 0} 
+            value={overviewData?.drivers?.available || 0} 
             icon={<PersonIcon />} 
             color="success"
             isLoading={isOverviewLoading}
@@ -51,7 +51,7 @@ export default function Dashboard() {
         <Grid item xs={12} sm={6} md={4} lg={2}>
           <KpiCard 
             title="Ongoing Trips" 
-            value={overviewData?.trips?.ongoingTrips || 0} 
+            value={overviewData?.trips?.active || 0} 
             icon={<RouteIcon />} 
             color="warning"
             isLoading={isOverviewLoading}
@@ -60,7 +60,7 @@ export default function Dashboard() {
         <Grid item xs={12} sm={6} md={4} lg={2}>
           <KpiCard 
             title="Pending Maintenance" 
-            value={overviewData?.maintenance?.pendingRequests || 0} 
+            value={overviewData?.maintenance?.pending || 0} 
             icon={<BuildIcon />} 
             color="error"
             isLoading={isOverviewLoading}
@@ -68,8 +68,8 @@ export default function Dashboard() {
         </Grid>
         <Grid item xs={12} sm={6} md={4} lg={2}>
           <KpiCard 
-            title="Fuel Logs" 
-            value={overviewData?.fuel?.totalLogs || 0} 
+            title="Fuel (Liters)" 
+            value={overviewData?.fuel?.totalLiters || 0} 
             icon={<LocalGasStationIcon />} 
             color="info"
             isLoading={isOverviewLoading}
@@ -78,7 +78,7 @@ export default function Dashboard() {
         <Grid item xs={12} sm={6} md={4} lg={2}>
           <KpiCard 
             title="Total Expenses" 
-            value={`$${overviewData?.expenses?.totalAmount?.toFixed(2) || '0.00'}`} 
+            value={`$${overviewData?.expense?.totalCost?.toFixed(2) || '0.00'}`} 
             icon={<ReceiptIcon />} 
             color="secondary"
             isLoading={isOverviewLoading}
@@ -90,31 +90,31 @@ export default function Dashboard() {
       <Grid container spacing={3}>
         {/* Vehicle Status Chart */}
         <Grid item xs={12} md={6} lg={4}>
-          <Card sx={{ height: '100%' }}>
-            <CardHeader title="Vehicle Status" />
+          <Card sx={{ height: '100%', backgroundColor: '#16213e' }}>
+            <CardHeader title="Vehicle Types" titleTypographyProps={{ color: '#fff' }} />
             <CardContent>
               {isChartsLoading ? (
-                <Skeleton variant="rectangular" height={300} />
+                <Skeleton variant="rectangular" height={300} sx={{ bgcolor: 'rgba(255,255,255,0.1)' }} />
               ) : (
                 <Box sx={{ height: 300 }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
-                        data={chartsData?.fleet || []}
+                        data={chartsData?.fleet?.vehiclesByType?.map(v => ({ name: v.type, count: v._count.id })) || []}
                         cx="50%"
                         cy="50%"
                         innerRadius={60}
                         outerRadius={80}
                         paddingAngle={5}
                         dataKey="count"
-                        nameKey="status"
+                        nameKey="name"
                       >
-                        {chartsData?.fleet?.map((entry, index) => (
+                        {(chartsData?.fleet?.vehiclesByType || []).map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
-                      <RechartsTooltip />
-                      <Legend />
+                      <RechartsTooltip contentStyle={{ backgroundColor: '#1E293B', border: 'none', color: '#fff' }} />
+                      <Legend wrapperStyle={{ color: '#94A3B8' }} />
                     </PieChart>
                   </ResponsiveContainer>
                 </Box>
@@ -125,23 +125,23 @@ export default function Dashboard() {
 
         {/* Expenses Trend Chart */}
         <Grid item xs={12} md={6} lg={8}>
-          <Card sx={{ height: '100%' }}>
-            <CardHeader title="Expenses Trend" />
+          <Card sx={{ height: '100%', backgroundColor: '#16213e' }}>
+            <CardHeader title="Expenses By Category" titleTypographyProps={{ color: '#fff' }} />
             <CardContent>
               {isChartsLoading ? (
-                <Skeleton variant="rectangular" height={300} />
+                <Skeleton variant="rectangular" height={300} sx={{ bgcolor: 'rgba(255,255,255,0.1)' }} />
               ) : (
                 <Box sx={{ height: 300 }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart
-                      data={chartsData?.expenses || []}
+                      data={chartsData?.expenses?.expensesByCategory?.map(e => ({ category: e.type, amount: e._sum.amount })) || []}
                       margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                     >
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-                      <XAxis dataKey="date" stroke="#666" tick={{ fill: '#999', fontSize: 12 }} />
+                      <XAxis dataKey="category" stroke="#666" tick={{ fill: '#999', fontSize: 12 }} />
                       <YAxis stroke="#666" tick={{ fill: '#999', fontSize: 12 }} />
-                      <RechartsTooltip />
-                      <Legend />
+                      <RechartsTooltip cursor={{ fill: 'rgba(255,255,255,0.05)' }} contentStyle={{ backgroundColor: '#1E293B', border: 'none', color: '#fff' }} />
+                      <Legend wrapperStyle={{ color: '#94A3B8' }} />
                       <Bar dataKey="amount" fill="#3498db" name="Amount ($)" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
@@ -153,25 +153,25 @@ export default function Dashboard() {
 
         {/* Trips Trend Chart */}
         <Grid item xs={12}>
-          <Card>
-            <CardHeader title="Trips Trend (Last 7 Days)" />
+          <Card sx={{ backgroundColor: '#16213e' }}>
+            <CardHeader title="Trips By Status" titleTypographyProps={{ color: '#fff' }} />
             <CardContent>
               {isChartsLoading ? (
-                <Skeleton variant="rectangular" height={300} />
+                <Skeleton variant="rectangular" height={300} sx={{ bgcolor: 'rgba(255,255,255,0.1)' }} />
               ) : (
                 <Box sx={{ height: 300 }}>
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart
-                      data={chartsData?.trips || []}
+                    <BarChart
+                      data={chartsData?.trips?.dailyTrips?.map(t => ({ status: t.status, count: t._count.id })) || []}
                       margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                     >
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-                      <XAxis dataKey="date" stroke="#666" tick={{ fill: '#999', fontSize: 12 }} />
+                      <XAxis dataKey="status" stroke="#666" tick={{ fill: '#999', fontSize: 12 }} />
                       <YAxis stroke="#666" tick={{ fill: '#999', fontSize: 12 }} />
-                      <RechartsTooltip />
-                      <Legend />
-                      <Line type="monotone" dataKey="count" stroke="#2ecc71" strokeWidth={2} activeDot={{ r: 6, fill: '#2ecc71' }} name="Completed Trips" />
-                    </LineChart>
+                      <RechartsTooltip cursor={{ fill: 'rgba(255,255,255,0.05)' }} contentStyle={{ backgroundColor: '#1E293B', border: 'none', color: '#fff' }} />
+                      <Legend wrapperStyle={{ color: '#94A3B8' }} />
+                      <Bar dataKey="count" fill="#2ecc71" name="Trips" radius={[4, 4, 0, 0]} />
+                    </BarChart>
                   </ResponsiveContainer>
                 </Box>
               )}

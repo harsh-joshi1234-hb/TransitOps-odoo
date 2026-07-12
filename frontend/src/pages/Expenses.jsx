@@ -463,7 +463,7 @@ export default function Expenses() {
       )}
 
       {/* Timeline Stepper Modal */}
-      {showTimelineModal && selectedTimeline && (
+      {showTimelineModal && selectedTimelineId && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-6">
             <div className="flex justify-between items-center pb-4 border-b border-gray-100">

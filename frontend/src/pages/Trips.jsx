@@ -213,14 +213,14 @@ export default function Trips() {
                     <TableCell><Skeleton animation="wave" /></TableCell>
                   </TableRow>
                 ))
-              ) : data?.data?.length === 0 ? (
+              ) : data?.data?.trips?.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
                     No trips found.
                   </TableCell>
                 </TableRow>
               ) : (
-                data?.data?.map((trip) => (
+                data?.data?.trips?.map((trip) => (
                   <TableRow key={trip.id} hover>
                     <TableCell>
                       <Typography variant="body2" fontWeight="bold">
