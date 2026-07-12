@@ -53,6 +53,8 @@ async function main() {
     name: `Fleet Truck ${i + 1}`,
     model: i % 2 === 0 ? 'Volvo FH16' : 'Scania R500',
     type: i % 3 === 0 ? 'REFRIGERATED' : 'FLATBED',
+    fuelType: 'DIESEL',
+    fuelTankCapacity: 300,
     maxLoadCapacity: 15000 + (i * 1000), // in kg
     odometer: 10000 + (i * 5000),
     acquisitionCost: 120000 - (i * 2000),
@@ -143,11 +145,27 @@ async function main() {
 
   // 7. Fuel Logs (20 Fuel Logs)
   for (let i = 0; i < 20; i++) {
+    const v = createdVehicles[i % 10];
+    const liters = 100 + (i * 5);
+    const pricePerLiter = 1.5;
     await prisma.fuelLog.create({
       data: {
-        liters: 100 + (i * 5),
-        cost: 150.0 + (i * 7),
-        vehicleId: createdVehicles[i % 10].id,
+        fuelLogNumber: `FUEL-${todayStr}-${String(i + 1).padStart(4, '0')}`,
+        status: i % 2 === 0 ? 'APPROVED' : 'SUBMITTED',
+        fuelType: 'DIESEL',
+        fuelStation: 'Shell Station 1',
+        paymentMethod: 'CORPORATE_CARD',
+        pricePerLiter,
+        totalCost: liters * pricePerLiter,
+        liters,
+        odometer: v.odometer + i * 100,
+        filledAt: new Date(),
+        vehicleId: v.id,
+        tripId: createdTrips[i % 20]?.id,
+        driverId: createdTrips[i % 20]?.driverId,
+        createdByUserId: adminId,
+        approvedByUserId: i % 2 === 0 ? adminId : null,
+        approvedAt: i % 2 === 0 ? new Date() : null,
       },
     });
   }

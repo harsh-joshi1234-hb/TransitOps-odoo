@@ -73,6 +73,30 @@ enum VehicleType {
   BUS
   OTHER
 }
+enum FuelType {
+  DIESEL
+  PETROL
+  CNG
+  LNG
+  ELECTRIC
+  OTHER
+}
+
+enum PaymentMethod {
+  CASH
+  CORPORATE_CARD
+  FUEL_CARD
+  BANK_TRANSFER
+  CREDIT
+  OTHER
+}
+
+enum FuelLogStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
 
 enum ExpenseType {
   TOLL
@@ -119,6 +143,8 @@ model User {
   maintenanceApproved  Maintenance[] @relation("MaintenanceApprovedBy")
   maintenanceCompleted Maintenance[] @relation("MaintenanceCompletedBy")
   maintenanceCancelled Maintenance[] @relation("MaintenanceCancelledBy")
+  fuelLogsCreated      FuelLog[] @relation("FuelLogCreatedBy")
+  fuelLogsApproved     FuelLog[] @relation("FuelLogApprovedBy")
 
   // Audit
   createdAt DateTime @default(now())
@@ -135,6 +161,8 @@ model Vehicle {
   name               String
   model              String
   type               VehicleType
+  fuelType           FuelType      @default(DIESEL)
+  fuelTankCapacity   Float?
   maxLoadCapacity    Float         // In kg or tons
   odometer           Float         @default(0) // Current mileage
   acquisitionCost    Float
@@ -175,6 +203,7 @@ model Driver {
 
   // Relations
   trips              Trip[]
+  fuelLogs           FuelLog[]
 
   // Audit
   createdAt          DateTime     @default(now())
@@ -204,6 +233,7 @@ model Trip {
   driver          Driver     @relation(fields: [driverId], references: [id], onDelete: Restrict)
 
   expenses        Expense[]
+  fuelLogs        FuelLog[]
 
   // Realized Metrics
   plannedStartTime DateTime?
@@ -272,21 +302,50 @@ model Maintenance {
 }
 
 model FuelLog {
-  id        String   @id @default(uuid())
-  liters    Float
-  cost      Float
-  date      DateTime @default(now())
+  id                String          @id @default(uuid())
+  fuelLogNumber     String          @unique
+  status            FuelLogStatus   @default(DRAFT)
+  fuelType          FuelType
+  fuelStation       String?
+  vendor            String?
+  receiptNumber     String?
+  paymentMethod     PaymentMethod?
+  pricePerLiter     Float
+  totalCost         Float
+  liters            Float
+  odometer          Float
+  filledAt          DateTime
+  remarks           String?
+  attachments       Json?
+  isDeleted         Boolean         @default(false)
   
   // Relations
-  vehicleId String
-  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  vehicleId         String
+  vehicle           Vehicle         @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  tripId            String?
+  trip              Trip?           @relation(fields: [tripId], references: [id], onDelete: SetNull)
+  driverId          String?
+  driver            Driver?         @relation(fields: [driverId], references: [id], onDelete: SetNull)
+
+  // Audit Relations
+  createdByUserId   String
+  createdByUser     User            @relation("FuelLogCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  approvedByUserId  String?
+  approvedByUser    User?           @relation("FuelLogApprovedBy", fields: [approvedByUserId], references: [id], onDelete: SetNull)
 
   // Audit
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  submittedAt       DateTime?
+  approvedAt        DateTime?
+  rejectedAt        DateTime?
 
   @@index([vehicleId])
-  @@index([date])
+  @@index([tripId])
+  @@index([filledAt])
+  @@index([status])
+  @@index([isDeleted])
+  @@unique([vehicleId, filledAt, receiptNumber])
   @@map("fuel_logs")
 }
 

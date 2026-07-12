@@ -6,6 +6,7 @@ const vehicleRoutes = require('./vehicle.routes');
 const driverRoutes = require('./driver.routes');
 const tripRoutes = require('./trip.routes');
 const maintenanceRoutes = require('./maintenance.routes');
+const fuelRoutes = require('./fuel.routes');
 
 // Health Check
 router.get('/health', (req, res) => {
@@ -18,5 +19,6 @@ router.use('/vehicles', vehicleRoutes);
 router.use('/drivers', driverRoutes);
 router.use('/trips', tripRoutes);
 router.use('/maintenance', maintenanceRoutes);
+router.use('/fuel-logs', fuelRoutes);
 
 module.exports = router;
