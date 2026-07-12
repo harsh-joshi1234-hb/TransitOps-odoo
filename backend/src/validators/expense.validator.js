@@ -4,7 +4,7 @@ const VALID_EXPENSE_TYPES = ['TOLL', 'PARKING', 'FINE', 'MAINTENANCE', 'FUEL', '
 const VALID_EXPENSE_STATUSES = ['DRAFT', 'SUBMITTED', 'APPROVED', 'PENDING_PAYMENT', 'PROCESSING_PAYMENT', 'PAID', 'REJECTED'];
 
 const validateCreateExpense = (req, res, next) => {
-  const { type, amount, date, vendor, receiptNumber, vehicleId, tripId } = req.body;
+  const { type, amount, date, vendor, receiptNumber, vehicleId, tripId, maintenanceId } = req.body;
   const errors = [];
 
   if (!type || !VALID_EXPENSE_TYPES.includes(type)) {
@@ -19,6 +19,10 @@ const validateCreateExpense = (req, res, next) => {
     errors.push('date must be a valid ISO date string');
   }
 
+  if (vehicleId && typeof vehicleId !== 'string') errors.push('vehicleId must be a string');
+  if (tripId && typeof tripId !== 'string') errors.push('tripId must be a string');
+  if (maintenanceId && typeof maintenanceId !== 'string') errors.push('maintenanceId must be a string');
+
   if (errors.length > 0) {
     return next(new ApiError(400, errors.join('. ')));
   }
@@ -27,7 +31,7 @@ const validateCreateExpense = (req, res, next) => {
 };
 
 const validateUpdateExpense = (req, res, next) => {
-  const { type, amount, date } = req.body;
+  const { type, amount, date, vehicleId, tripId, maintenanceId } = req.body;
   const errors = [];
 
   if (type !== undefined && !VALID_EXPENSE_TYPES.includes(type)) {
@@ -41,6 +45,10 @@ const validateUpdateExpense = (req, res, next) => {
   if (date !== undefined && isNaN(new Date(date).getTime())) {
     errors.push('date must be a valid ISO date string');
   }
+
+  if (vehicleId !== undefined && typeof vehicleId !== 'string') errors.push('vehicleId must be a string');
+  if (tripId !== undefined && typeof tripId !== 'string') errors.push('tripId must be a string');
+  if (maintenanceId !== undefined && typeof maintenanceId !== 'string') errors.push('maintenanceId must be a string');
 
   if (errors.length > 0) {
     return next(new ApiError(400, errors.join('. ')));

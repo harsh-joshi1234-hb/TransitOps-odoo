@@ -21,7 +21,11 @@ class ExpenseService {
     return `${prefix}${String(nextSequence).padStart(4, '0')}`;
   }
 
-  async _validateResources(vehicleId, tripId) {
+  async _validateResources(vehicleId, tripId, maintenanceId) {
+    if (!vehicleId && !tripId && !maintenanceId) {
+      throw new ApiError(400, 'Expense must be linked to at least one entity (vehicle, trip, or maintenance)');
+    }
+
     if (vehicleId) {
       const vehicle = await vehicleRepository.findVehicleById(vehicleId);
       if (!vehicle) throw new ApiError(404, 'Vehicle not found');
@@ -36,10 +40,18 @@ class ExpenseService {
         throw new ApiError(400, 'Trip vehicle mismatch with provided vehicleId');
       }
     }
+
+    if (maintenanceId) {
+      const maintenance = await prisma.maintenance.findUnique({ where: { id: maintenanceId } });
+      if (!maintenance) throw new ApiError(404, 'Maintenance log not found');
+      if (vehicleId && maintenance.vehicleId !== vehicleId) {
+        throw new ApiError(400, 'Maintenance vehicle mismatch with provided vehicleId');
+      }
+    }
   }
 
   async createExpense(data, userId) {
-    await this._validateResources(data.vehicleId, data.tripId);
+    await this._validateResources(data.vehicleId, data.tripId, data.maintenanceId);
 
     // Enterprise Duplicate Check: vendor + expenseDate + amount + receiptNumber
     const duplicate = await expenseRepository.findDuplicateExpense({
@@ -96,7 +108,11 @@ class ExpenseService {
       throw new ApiError(400, `Cannot update expense that is currently ${expense.status}. Only DRAFT or REJECTED claims can be modified.`);
     }
 
-    await this._validateResources(data.vehicleId || expense.vehicleId, data.tripId || expense.tripId);
+    await this._validateResources(
+      data.vehicleId || expense.vehicleId,
+      data.tripId || expense.tripId,
+      data.maintenanceId || expense.maintenanceId
+    );
 
     return expenseRepository.updateExpense(id, data);
   }
@@ -114,6 +130,10 @@ class ExpenseService {
     const expense = await this.getExpenseById(id);
     if (expense.status !== 'SUBMITTED') {
       throw new ApiError(400, `Expense must be SUBMITTED to be approved. Current status: ${expense.status}`);
+    }
+
+    if (expense.createdByUserId === userId) {
+      throw new ApiError(403, 'Separation of Duties violation: You cannot approve your own expense.');
     }
 
     return expenseRepository.approveExpense(id, userId);

@@ -174,11 +174,13 @@ async function main() {
   for (let i = 0; i < 15; i++) {
     await prisma.expense.create({
       data: {
+        expenseNumber: `EXP-${todayStr}-${String(i + 1).padStart(4, '0')}`,
         type: i % 2 === 0 ? 'TOLL' : 'PARKING',
         amount: 25.0 + (i * 2),
         description: `En route expenses ${i}`,
         vehicleId: createdVehicles[i % 10].id,
         tripId: createdTrips[i % 20].id,
+        createdByUserId: adminId,
       },
     });
   }

@@ -292,6 +292,7 @@ model Maintenance {
   // Relations
   vehicleId         String
   vehicle           Vehicle           @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  expenses          Expense[]
 
   // Audit Relations
   reportedByUserId  String
@@ -377,11 +378,16 @@ model Expense {
   isDeleted        Boolean       @default(false)
   
   // Relations
-  vehicleId   String?
-  vehicle     Vehicle? @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+  vehicleId     String?
+  vehicle       Vehicle? @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
 
-  tripId      String?
-  trip        Trip?    @relation(fields: [tripId], references: [id], onDelete: SetNull)
+  tripId        String?
+  trip          Trip?    @relation(fields: [tripId], references: [id], onDelete: SetNull)
+
+  maintenanceId String?
+  maintenance   Maintenance? @relation(fields: [maintenanceId], references: [id], onDelete: SetNull)
+
+  attachments   Json?
 
   // Audit Relations
   createdByUserId  String
