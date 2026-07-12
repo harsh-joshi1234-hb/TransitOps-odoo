@@ -1,5 +1,6 @@
 const expenseRepository = require('../repositories/expense.repository');
 const vehicleRepository = require('../repositories/vehicle.repository');
+const notificationService = require('./notification.service');
 const prisma = require('../config/prisma');
 const ApiError = require('../utils/apiError');
 
@@ -136,7 +137,19 @@ class ExpenseService {
       throw new ApiError(403, 'Separation of Duties violation: You cannot approve your own expense.');
     }
 
-    return expenseRepository.approveExpense(id, userId);
+    const updatedExpense = await expenseRepository.approveExpense(id, userId);
+
+    await notificationService.createNotification({
+      title: 'Expense Approved',
+      message: `Expense ${expense.expenseNumber} has been approved.`,
+      type: 'EXPENSE_APPROVED',
+      priority: 'NORMAL',
+      userId: expense.createdByUserId,
+      relatedEntity: 'Expense',
+      relatedEntityId: expense.id
+    });
+
+    return updatedExpense;
   }
 
   async rejectExpense(id, rejectionReason) {
@@ -145,7 +158,19 @@ class ExpenseService {
       throw new ApiError(400, `Expense must be SUBMITTED to be rejected. Current status: ${expense.status}`);
     }
 
-    return expenseRepository.rejectExpense(id, rejectionReason);
+    const updatedExpense = await expenseRepository.rejectExpense(id, rejectionReason);
+
+    await notificationService.createNotification({
+      title: 'Expense Rejected',
+      message: `Expense ${expense.expenseNumber} has been rejected. Reason: ${rejectionReason}`,
+      type: 'EXPENSE_REJECTED',
+      priority: 'HIGH',
+      userId: expense.createdByUserId,
+      relatedEntity: 'Expense',
+      relatedEntityId: expense.id
+    });
+
+    return updatedExpense;
   }
 
   async transitionPaymentState(id, targetStatus, userId, paymentReference = null) {

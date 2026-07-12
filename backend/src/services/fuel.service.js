@@ -1,5 +1,6 @@
 const fuelRepository = require('../repositories/fuel.repository');
 const vehicleRepository = require('../repositories/vehicle.repository');
+const notificationService = require('./notification.service');
 const prisma = require('../config/prisma');
 const ApiError = require('../utils/apiError');
 
@@ -126,7 +127,19 @@ class FuelService {
       throw new ApiError(400, `Fuel log must be SUBMITTED to be approved. Current status: ${fuelLog.status}`);
     }
 
-    return fuelRepository.approveFuelLog(id, fuelLog.vehicleId, fuelLog.odometer, userId);
+    const updatedFuelLog = await fuelRepository.approveFuelLog(id, fuelLog.vehicleId, fuelLog.odometer, userId);
+
+    await notificationService.createNotification({
+      title: 'Fuel Log Approved',
+      message: `Fuel log ${fuelLog.fuelLogNumber} has been approved.`,
+      type: 'FUEL_APPROVED',
+      priority: 'NORMAL',
+      userId: fuelLog.createdByUserId,
+      relatedEntity: 'FuelLog',
+      relatedEntityId: fuelLog.id
+    });
+
+    return updatedFuelLog;
   }
 
   async rejectFuelLog(id) {

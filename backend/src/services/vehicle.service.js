@@ -1,4 +1,5 @@
 const vehicleRepository = require('../repositories/vehicle.repository');
+const notificationService = require('./notification.service');
 const ApiError = require('../utils/apiError');
 
 class VehicleService {
@@ -92,7 +93,32 @@ class VehicleService {
       throw new ApiError(400, 'Odometer reading cannot be negative');
     }
 
-    return vehicleRepository.updateVehicle(id, data);
+    const updatedVehicle = await vehicleRepository.updateVehicle(id, data);
+
+    // Business Logic: Notifications for status changes
+    if (data.status && data.status !== vehicle.status) {
+      if (data.status === 'IN_SHOP') {
+        await notificationService.notifyRole('Fleet Manager', {
+          title: 'Vehicle In Shop',
+          message: `Vehicle ${vehicle.registrationNumber} is now IN_SHOP.`,
+          type: 'VEHICLE_IN_SHOP',
+          priority: 'HIGH',
+          relatedEntity: 'Vehicle',
+          relatedEntityId: vehicle.id
+        });
+      } else if (data.status === 'AVAILABLE') {
+        await notificationService.notifyRole('Fleet Manager', {
+          title: 'Vehicle Available',
+          message: `Vehicle ${vehicle.registrationNumber} is now AVAILABLE.`,
+          type: 'VEHICLE_AVAILABLE',
+          priority: 'NORMAL',
+          relatedEntity: 'Vehicle',
+          relatedEntityId: vehicle.id
+        });
+      }
+    }
+
+    return updatedVehicle;
   }
 
   async softDeleteVehicle(id) {

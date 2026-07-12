@@ -1,5 +1,6 @@
 const maintenanceRepository = require('../repositories/maintenance.repository');
 const vehicleRepository = require('../repositories/vehicle.repository');
+const notificationService = require('./notification.service');
 const prisma = require('../config/prisma');
 const ApiError = require('../utils/apiError');
 
@@ -31,7 +32,19 @@ class MaintenanceService {
     // For REQUESTED state, we use current vehicle odometer
     data.currentOdometer = vehicle.odometer;
     
-    return maintenanceRepository.createMaintenance(data);
+    const newMaintenance = await maintenanceRepository.createMaintenance(data);
+
+    await notificationService.createNotification({
+      title: 'Maintenance Requested',
+      message: `Maintenance ${newMaintenance.maintenanceNumber} has been requested for vehicle ${vehicle.registrationNumber}.`,
+      type: 'MAINTENANCE_REQUESTED',
+      priority: 'NORMAL',
+      userId: userId,
+      relatedEntity: 'Maintenance',
+      relatedEntityId: newMaintenance.id
+    });
+
+    return newMaintenance;
   }
 
   async getMaintenanceById(id) {
@@ -129,7 +142,19 @@ class MaintenanceService {
     // Update maintenance currentOdometer to reflect exact moment of starting
     await maintenanceRepository.updateMaintenance(id, { currentOdometer });
 
-    return maintenanceRepository.startMaintenance(id, vehicle.id);
+    const updatedMaintenance = await maintenanceRepository.startMaintenance(id, vehicle.id);
+
+    await notificationService.createNotification({
+      title: 'Maintenance Started',
+      message: `Maintenance ${maintenance.maintenanceNumber} has started.`,
+      type: 'MAINTENANCE_STARTED',
+      priority: 'NORMAL',
+      userId: maintenance.reportedByUserId,
+      relatedEntity: 'Maintenance',
+      relatedEntityId: maintenance.id
+    });
+
+    return updatedMaintenance;
   }
 
   async completeMaintenance(id, actualCost, nextServiceDate, userId) {
@@ -147,7 +172,19 @@ class MaintenanceService {
       throw new ApiError(400, 'nextServiceDate must be strictly greater than the serviceDate');
     }
 
-    return maintenanceRepository.completeMaintenance(id, maintenance.vehicleId, actualCost, nextServiceDate, userId);
+    const updatedMaintenance = await maintenanceRepository.completeMaintenance(id, maintenance.vehicleId, actualCost, nextServiceDate, userId);
+
+    await notificationService.createNotification({
+      title: 'Maintenance Completed',
+      message: `Maintenance ${maintenance.maintenanceNumber} has been completed.`,
+      type: 'MAINTENANCE_COMPLETED',
+      priority: 'NORMAL',
+      userId: maintenance.reportedByUserId,
+      relatedEntity: 'Maintenance',
+      relatedEntityId: maintenance.id
+    });
+
+    return updatedMaintenance;
   }
 
   async cancelMaintenance(id, userId) {

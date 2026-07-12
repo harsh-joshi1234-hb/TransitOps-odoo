@@ -1,6 +1,7 @@
 const tripRepository = require('../repositories/trip.repository');
 const vehicleRepository = require('../repositories/vehicle.repository');
 const driverRepository = require('../repositories/driver.repository');
+const notificationService = require('./notification.service');
 const ApiError = require('../utils/apiError');
 
 class TripService {
@@ -106,7 +107,19 @@ class TripService {
     if (vehicle.status !== 'AVAILABLE') throw new ApiError(400, `Vehicle is not AVAILABLE (Current: ${vehicle.status})`);
     if (driver.status !== 'AVAILABLE') throw new ApiError(400, `Driver is not AVAILABLE (Current: ${driver.status})`);
 
-    return tripRepository.dispatchTrip(id, trip.vehicleId, trip.driverId);
+    const updatedTrip = await tripRepository.dispatchTrip(id, trip.vehicleId, trip.driverId);
+    
+    await notificationService.createNotification({
+      title: 'Trip Dispatched',
+      message: `Trip ${trip.tripNumber} has been dispatched.`,
+      type: 'TRIP_DISPATCHED',
+      priority: 'NORMAL',
+      userId: trip.createdByUserId,
+      relatedEntity: 'Trip',
+      relatedEntityId: trip.id
+    });
+
+    return updatedTrip;
   }
 
   async startTrip(id) {
@@ -132,7 +145,19 @@ class TripService {
       throw new ApiError(400, 'A valid actualDistance is required to complete the trip');
     }
 
-    return tripRepository.completeTrip(id, trip.vehicleId, trip.driverId, actualDistance, new Date(), userId);
+    const updatedTrip = await tripRepository.completeTrip(id, trip.vehicleId, trip.driverId, actualDistance, new Date(), userId);
+
+    await notificationService.createNotification({
+      title: 'Trip Completed',
+      message: `Trip ${trip.tripNumber} has been completed.`,
+      type: 'TRIP_COMPLETED',
+      priority: 'NORMAL',
+      userId: trip.createdByUserId,
+      relatedEntity: 'Trip',
+      relatedEntityId: trip.id
+    });
+
+    return updatedTrip;
   }
 
   async cancelTrip(id) {
