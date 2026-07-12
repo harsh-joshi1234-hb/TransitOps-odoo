@@ -1,7 +1,8 @@
 const express = require('express');
 const tripController = require('../controllers/trip.controller');
 const { validateCreateTrip, validateUpdateTrip } = require('../validators/trip.validator');
-const { authenticate, authorize } = require('../middlewares/authorize');
+const authenticate = require('../middlewares/authenticate');
+const authorize = require('../middlewares/authorize');
 
 const router = express.Router();
 

@@ -1,7 +1,8 @@
 const express = require('express');
 const maintenanceController = require('../controllers/maintenance.controller');
 const { validateCreateMaintenance, validateUpdateMaintenance } = require('../validators/maintenance.validator');
-const { authenticate, authorize } = require('../middlewares/authorize');
+const authenticate = require('../middlewares/authenticate');
+const authorize = require('../middlewares/authorize');
 
 const router = express.Router();
 

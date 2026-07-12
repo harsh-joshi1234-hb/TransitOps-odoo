@@ -107,6 +107,16 @@ enum ExpenseType {
   OTHER
 }
 
+enum ExpenseStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  PENDING_PAYMENT
+  PROCESSING_PAYMENT
+  PAID
+  REJECTED
+}
+
 // ----------------------------------------------------
 // MODELS
 // ----------------------------------------------------
@@ -145,6 +155,9 @@ model User {
   maintenanceCancelled Maintenance[] @relation("MaintenanceCancelledBy")
   fuelLogsCreated      FuelLog[] @relation("FuelLogCreatedBy")
   fuelLogsApproved     FuelLog[] @relation("FuelLogApprovedBy")
+  expensesCreated      Expense[] @relation("ExpenseCreatedBy")
+  expensesApproved     Expense[] @relation("ExpenseApprovedBy")
+  expensesPaid         Expense[] @relation("ExpensePaidBy")
 
   // Audit
   createdAt DateTime @default(now())
@@ -350,11 +363,18 @@ model FuelLog {
 }
 
 model Expense {
-  id          String      @id @default(uuid())
-  type        ExpenseType
-  amount      Float
-  date        DateTime @default(now())
-  description String?
+  id               String        @id @default(uuid())
+  expenseNumber    String        @unique
+  status           ExpenseStatus @default(DRAFT)
+  type             ExpenseType
+  amount           Float
+  date             DateTime      @default(now())
+  description      String?
+  vendor           String?
+  receiptNumber    String?
+  rejectionReason  String?
+  paymentReference String?
+  isDeleted        Boolean       @default(false)
   
   // Relations
   vehicleId   String?
@@ -363,12 +383,27 @@ model Expense {
   tripId      String?
   trip        Trip?    @relation(fields: [tripId], references: [id], onDelete: SetNull)
 
-  // Audit
+  // Audit Relations
+  createdByUserId  String
+  createdByUser    User          @relation("ExpenseCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  approvedByUserId String?
+  approvedByUser   User?         @relation("ExpenseApprovedBy", fields: [approvedByUserId], references: [id], onDelete: SetNull)
+  paidByUserId     String?
+  paidByUser       User?         @relation("ExpensePaidBy", fields: [paidByUserId], references: [id], onDelete: SetNull)
+
+  // Audit & SLA Timestamps
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  submittedAt DateTime?
+  approvedAt  DateTime?
+  rejectedAt  DateTime?
+  paidAt      DateTime?
 
   @@index([vehicleId])
   @@index([tripId])
   @@index([date])
+  @@index([status])
+  @@index([isDeleted])
+  @@index([vendor, date, amount])
   @@map("expenses")
 }

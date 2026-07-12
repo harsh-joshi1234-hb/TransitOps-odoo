@@ -1,7 +1,8 @@
 const express = require('express');
 const fuelController = require('../controllers/fuel.controller');
 const { validateCreateFuelLog, validateUpdateFuelLog } = require('../validators/fuel.validator');
-const { authenticate, authorize } = require('../middlewares/authorize');
+const authenticate = require('../middlewares/authenticate');
+const authorize = require('../middlewares/authorize');
 
 const router = express.Router();
 
