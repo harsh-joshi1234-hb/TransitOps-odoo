@@ -121,13 +121,22 @@ async function main() {
 
   // 6. Maintenance (5 Maintenance)
   for (let i = 0; i < 5; i++) {
+    const v = createdVehicles[i];
     await prisma.maintenance.create({
       data: {
+        maintenanceNumber: `MNT-${todayStr}-${String(i + 1).padStart(4, '0')}`,
+        maintenanceType: i % 2 === 0 ? 'PREVENTIVE' : 'CORRECTIVE',
+        priority: i % 3 === 0 ? 'HIGH' : 'NORMAL',
         description: `Routine Oil Change & Inspection ${i}`,
-        cost: 250.0 + (i * 20),
-        startDate: new Date(),
-        status: 'CLOSED',
-        vehicleId: createdVehicles[i].id,
+        estimatedCost: 200.0,
+        actualCost: 250.0 + (i * 20),
+        serviceDate: new Date(),
+        nextServiceDate: new Date(new Date().setDate(new Date().getDate() + 90)),
+        currentOdometer: v.odometer,
+        status: i < 3 ? 'COMPLETED' : 'REQUESTED',
+        vehicleId: v.id,
+        reportedByUserId: adminId,
+        completedByUserId: i < 3 ? adminId : null,
       },
     });
   }

@@ -42,10 +42,26 @@ enum TripPriority {
 }
 
 enum MaintenanceStatus {
-  OPEN
+  REQUESTED
+  SCHEDULED
   IN_PROGRESS
-  CLOSED
+  COMPLETED
   CANCELLED
+}
+
+enum MaintenanceType {
+  PREVENTIVE
+  CORRECTIVE
+  EMERGENCY
+  INSPECTION
+  ROUTINE_SERVICE
+}
+
+enum MaintenancePriority {
+  LOW
+  NORMAL
+  HIGH
+  CRITICAL
 }
 
 enum VehicleType {
@@ -99,6 +115,10 @@ model User {
   role      Role     @relation(fields: [roleId], references: [id], onDelete: Restrict)
   tripsCreated   Trip[] @relation("TripCreatedBy")
   tripsCompleted Trip[] @relation("TripCompletedBy")
+  maintenanceReported  Maintenance[] @relation("MaintenanceReportedBy")
+  maintenanceApproved  Maintenance[] @relation("MaintenanceApprovedBy")
+  maintenanceCompleted Maintenance[] @relation("MaintenanceCompletedBy")
+  maintenanceCancelled Maintenance[] @relation("MaintenanceCancelledBy")
 
   // Audit
   createdAt DateTime @default(now())
@@ -210,23 +230,44 @@ model Trip {
 }
 
 model Maintenance {
-  id          String            @id @default(uuid())
-  description String
-  cost        Float             @default(0.0)
-  startDate   DateTime          @default(now())
-  endDate     DateTime?
-  status      MaintenanceStatus @default(OPEN)
+  id                String            @id @default(uuid())
+  maintenanceNumber String            @unique
+  maintenanceType   MaintenanceType
+  priority          MaintenancePriority @default(NORMAL)
+  description       String
+  estimatedCost     Float?
+  actualCost        Float?
+  vendor            String?
+  technician        String?
+  serviceDate       DateTime?
+  nextServiceDate   DateTime?
+  currentOdometer   Float
+  remarks           String?
+  attachments       Json?
+  status            MaintenanceStatus @default(REQUESTED)
   
   // Relations
-  vehicleId   String
-  vehicle     Vehicle           @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  vehicleId         String
+  vehicle           Vehicle           @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  // Audit Relations
+  reportedByUserId  String
+  reportedByUser    User              @relation("MaintenanceReportedBy", fields: [reportedByUserId], references: [id], onDelete: Restrict)
+  approvedByUserId  String?
+  approvedByUser    User?             @relation("MaintenanceApprovedBy", fields: [approvedByUserId], references: [id], onDelete: SetNull)
+  completedByUserId String?
+  completedByUser   User?             @relation("MaintenanceCompletedBy", fields: [completedByUserId], references: [id], onDelete: SetNull)
+  cancelledByUserId String?
+  cancelledByUser   User?             @relation("MaintenanceCancelledBy", fields: [cancelledByUserId], references: [id], onDelete: SetNull)
 
   // Audit
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
 
   @@index([vehicleId])
   @@index([status])
+  @@index([maintenanceType])
+  @@index([serviceDate])
   @@map("maintenance_logs")
 }
 
