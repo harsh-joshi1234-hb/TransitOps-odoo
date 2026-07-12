@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import toast from 'react-hot-toast';
 import {
   DollarSign,
@@ -20,8 +19,8 @@ import {
   X,
   History
 } from 'lucide-react';
+import { useExpenses, useExpenseKPIs, useExpenseTimeline, useCreateExpense, useTransitionExpense } from '../features/expenses/api/useExpenses';
 
-const API_BASE = 'http://localhost:5000/api/expenses';
 
 const STATUS_CONFIG = {
   DRAFT: { label: 'Draft', color: 'bg-gray-100 text-gray-700 border-gray-300' },
@@ -34,9 +33,6 @@ const STATUS_CONFIG = {
 };
 
 export default function Expenses() {
-  const [expenses, setExpenses] = useState([]);
-  const [kpis, setKpis] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
@@ -44,7 +40,7 @@ export default function Expenses() {
   // Modal states
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showTimelineModal, setShowTimelineModal] = useState(false);
-  const [selectedTimeline, setSelectedTimeline] = useState(null);
+  const [selectedTimelineId, setSelectedTimelineId] = useState(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -56,97 +52,29 @@ export default function Expenses() {
     description: '',
   });
 
+  // Queries & Mutations
+  const { data: expensesRes, isLoading: loadingExpenses } = useExpenses({ 
+    status: statusFilter, 
+    type: typeFilter,
+    search: searchQuery 
+  });
+  
+  const { data: kpisRes, isLoading: loadingKpis } = useExpenseKPIs();
+  
+  const { data: timelineRes } = useExpenseTimeline(selectedTimelineId);
+
+  const createMutation = useCreateExpense();
+  const transitionMutation = useTransitionExpense();
+
+  const expenses = expensesRes?.data || [];
+  const kpis = kpisRes?.data || null;
+
   // Duplicate Check Warning State
   const [duplicateWarning, setDuplicateWarning] = useState(null);
 
-  useEffect(() => {
-    fetchExpensesAndKPIs();
-  }, [statusFilter, typeFilter]);
-
-  const fetchExpensesAndKPIs = async () => {
-    setLoading(true);
-    try {
-      // Mock fallback data in case local database isn't connected yet
-      const params = {};
-      if (statusFilter) params.status = statusFilter;
-      if (typeFilter) params.type = typeFilter;
-
-      try {
-        const [expensesRes, kpisRes] = await Promise.all([
-          axios.get(API_BASE, { params }),
-          axios.get(`${API_BASE}/kpis`),
-        ]);
-        setExpenses(expensesRes.data?.data?.expenses || []);
-        setKpis(kpisRes.data?.data || null);
-      } catch (err) {
-        // Sample enterprise preview data
-        setExpenses([
-          {
-            id: '1',
-            expenseNumber: 'EXP-20260712-0001',
-            status: 'PAID',
-            type: 'FUEL',
-            amount: 345.50,
-            vendor: 'Shell Petroleum #402',
-            receiptNumber: 'RCP-98231',
-            date: '2026-07-10T09:15:00Z',
-            submittedAt: '2026-07-10T09:30:00Z',
-            approvedAt: '2026-07-11T11:00:00Z',
-            paidAt: '2026-07-12T14:00:00Z'
-          },
-          {
-            id: '2',
-            expenseNumber: 'EXP-20260712-0002',
-            status: 'PROCESSING_PAYMENT',
-            type: 'MAINTENANCE',
-            amount: 1250.00,
-            vendor: 'Freightliner Heavy Repair',
-            receiptNumber: 'INV-4409',
-            date: '2026-07-11T14:20:00Z',
-            submittedAt: '2026-07-11T15:00:00Z',
-            approvedAt: '2026-07-12T08:30:00Z',
-          },
-          {
-            id: '3',
-            expenseNumber: 'EXP-20260712-0003',
-            status: 'APPROVED',
-            type: 'TOLL',
-            amount: 84.00,
-            vendor: 'Interstate Highway Authority',
-            receiptNumber: 'TLL-1120',
-            date: '2026-07-12T07:10:00Z',
-            submittedAt: '2026-07-12T07:45:00Z',
-            approvedAt: '2026-07-12T10:15:00Z',
-          },
-          {
-            id: '4',
-            expenseNumber: 'EXP-20260712-0004',
-            status: 'SUBMITTED',
-            type: 'PARKING',
-            amount: 45.00,
-            vendor: 'Metro Terminal Park',
-            receiptNumber: 'PRK-882',
-            date: '2026-07-12T11:00:00Z',
-            submittedAt: '2026-07-12T11:20:00Z',
-          }
-        ]);
-        setKpis({
-          pendingApproval: { count: 1, amount: 45.00 },
-          approvedExpenses: { count: 1, amount: 84.00 },
-          pendingPayments: { count: 1, amount: 1250.00 },
-          paidExpenses: { count: 1, amount: 345.50 },
-          averageApprovalTimeSeconds: 50400, // ~14h
-          averagePaymentTimeSeconds: 97200, // ~27h
-        });
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Real-time local duplicate detection check
   useEffect(() => {
-    if (!formData.amount || !formData.vendor) {
+    if (!formData.amount || !formData.vendor || !expenses.length) {
       setDuplicateWarning(null);
       return;
     }
@@ -166,13 +94,17 @@ export default function Expenses() {
   const handleCreateExpense = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(API_BASE, {
+      await createMutation.mutateAsync({
         ...formData,
         amount: parseFloat(formData.amount),
+        date: new Date(formData.date).toISOString()
       });
       toast.success('Expense claim created successfully!');
       setShowCreateModal(false);
-      fetchExpensesAndKPIs();
+      setFormData({
+        type: 'FUEL', amount: '', date: new Date().toISOString().slice(0, 10),
+        vendor: '', receiptNumber: '', description: '',
+      });
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to create expense claim.');
     }
@@ -180,46 +112,15 @@ export default function Expenses() {
 
   const handleLifecycleTransition = async (id, action) => {
     try {
-      await axios.post(`${API_BASE}/${id}/${action}`);
+      await transitionMutation.mutateAsync({ id, action });
       toast.success(`Expense ${action.replace('-', ' ')} successful`);
-      fetchExpensesAndKPIs();
     } catch (err) {
-      // Local state fallback update for demo mode
-      setExpenses((prev) =>
-        prev.map((item) => {
-          if (item.id === id) {
-            let nextStatus = item.status;
-            if (action === 'submit') nextStatus = 'SUBMITTED';
-            if (action === 'approve') nextStatus = 'APPROVED';
-            if (action === 'reject') nextStatus = 'REJECTED';
-            if (action === 'pending-payment') nextStatus = 'PENDING_PAYMENT';
-            if (action === 'processing-payment') nextStatus = 'PROCESSING_PAYMENT';
-            if (action === 'pay') nextStatus = 'PAID';
-            return { ...item, status: nextStatus };
-          }
-          return item;
-        })
-      );
-      toast.success(`Expense transitioned successfully`);
+      toast.error(err.response?.data?.message || `Failed to transition expense`);
     }
   };
 
-  const handleViewTimeline = async (expense) => {
-    try {
-      const res = await axios.get(`${API_BASE}/${expense.id}/timeline`);
-      setSelectedTimeline(res.data?.data);
-    } catch (err) {
-      // Compute from expense record
-      setSelectedTimeline({
-        expenseNumber: expense.expenseNumber,
-        status: expense.status,
-        submittedAt: expense.submittedAt || null,
-        approvedAt: expense.approvedAt || null,
-        paidAt: expense.paidAt || null,
-        approvalDuration: expense.submittedAt && expense.approvedAt ? 50400 : null,
-        paymentDuration: expense.approvedAt && expense.paidAt ? 97200 : null,
-      });
-    }
+  const handleViewTimeline = (expense) => {
+    setSelectedTimelineId(expense.id);
     setShowTimelineModal(true);
   };
 
@@ -566,9 +467,9 @@ export default function Expenses() {
             <div className="flex justify-between items-center pb-4 border-b border-gray-100">
               <div>
                 <h3 className="text-lg font-bold text-gray-900">Lifecycle Audit Timeline</h3>
-                <span className="text-xs font-semibold text-indigo-600">{selectedTimeline.expenseNumber}</span>
+                <span className="text-xs font-semibold text-indigo-600">{selectedTimelineId}</span>
               </div>
-              <button onClick={() => setShowTimelineModal(false)} className="text-gray-400 hover:text-gray-600">
+              <button onClick={() => { setShowTimelineModal(false); setSelectedTimelineId(null); }} className="text-gray-400 hover:text-gray-600">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -581,8 +482,8 @@ export default function Expenses() {
                 <div>
                   <h4 className="text-sm font-bold text-gray-900">Submitted</h4>
                   <p className="text-xs text-gray-500 mt-0.5">
-                    {selectedTimeline.submittedAt
-                      ? new Date(selectedTimeline.submittedAt).toLocaleString()
+                    {timelineRes?.data?.submittedAt
+                      ? new Date(timelineRes.data.submittedAt).toLocaleString()
                       : 'Pending Submission'}
                   </p>
                 </div>
@@ -595,8 +496,8 @@ export default function Expenses() {
                 <div>
                   <h4 className="text-sm font-bold text-gray-900">Finance Approval</h4>
                   <p className="text-xs text-gray-500 mt-0.5">
-                    {selectedTimeline.approvedAt
-                      ? `${new Date(selectedTimeline.approvedAt).toLocaleString()} (${formatDuration(selectedTimeline.approvalDuration)} SLA)`
+                    {timelineRes?.data?.approvedAt
+                      ? `${new Date(timelineRes.data.approvedAt).toLocaleString()} (${formatDuration(timelineRes.data.approvalDuration)} SLA)`
                       : 'Awaiting Manager Sign-off'}
                   </p>
                 </div>
@@ -609,8 +510,8 @@ export default function Expenses() {
                 <div>
                   <h4 className="text-sm font-bold text-gray-900">Disbursed & Paid</h4>
                   <p className="text-xs text-gray-500 mt-0.5">
-                    {selectedTimeline.paidAt
-                      ? `${new Date(selectedTimeline.paidAt).toLocaleString()} (${formatDuration(selectedTimeline.paymentDuration)} SLA)`
+                    {timelineRes?.data?.paidAt
+                      ? `${new Date(timelineRes.data.paidAt).toLocaleString()} (${formatDuration(timelineRes.data.paymentDuration)} SLA)`
                       : 'Pending Treasury Clearing'}
                   </p>
                 </div>
@@ -619,7 +520,7 @@ export default function Expenses() {
 
             <div className="mt-8 pt-4 border-t border-gray-100 flex justify-end">
               <button
-                onClick={() => setShowTimelineModal(false)}
+                onClick={() => { setShowTimelineModal(false); setSelectedTimelineId(null); }}
                 className="px-5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-xl"
               >
                 Close Timeline

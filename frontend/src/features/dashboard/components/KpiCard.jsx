@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Card, CardContent, Typography, Box, Skeleton } from '@mui/material';
 
-export default function KpiCard({ title, value, icon, color, isLoading }) {
+const KpiCard = memo(function KpiCard({ title, value, icon, color, isLoading }) {
   if (isLoading) {
     return (
       <Card sx={{ height: '100%' }}>
@@ -42,4 +42,6 @@ export default function KpiCard({ title, value, icon, color, isLoading }) {
       </CardContent>
     </Card>
   );
-}
+});
+
+export default KpiCard;

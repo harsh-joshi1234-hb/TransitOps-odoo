@@ -1,28 +1,38 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Box, CircularProgress } from '@mui/material';
 import MainLayout from '../layouts/MainLayout';
 import AuthLayout from '../layouts/AuthLayout';
-import Landing from '../pages/Landing';
-import Login from '../pages/Login';
-import ForgotPassword from '../pages/ForgotPassword';
-import ResetPassword from '../pages/ResetPassword';
-import Dashboard from '../pages/Dashboard';
-import Vehicles from '../pages/Vehicles';
-import Drivers from '../pages/Drivers';
-import Trips from '../pages/Trips';
-import Maintenance from '../pages/Maintenance';
-import Fuel from '../pages/Fuel';
-import Expenses from '../pages/Expenses';
-import Reports from '../pages/Reports';
-import Settings from '../pages/Settings';
-import Unauthorized from '../pages/Unauthorized';
-import PageNotFound from '../components/common/PageNotFound';
 import { ProtectedRoute } from './ProtectedRoute';
+import PageNotFound from '../components/common/PageNotFound';
+
+// Lazy loaded views
+const Landing = lazy(() => import('../pages/Landing'));
+const Login = lazy(() => import('../pages/Login'));
+const ForgotPassword = lazy(() => import('../pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('../pages/ResetPassword'));
+const Dashboard = lazy(() => import('../pages/Dashboard'));
+const Vehicles = lazy(() => import('../pages/Vehicles'));
+const Drivers = lazy(() => import('../pages/Drivers'));
+const Trips = lazy(() => import('../pages/Trips'));
+const Maintenance = lazy(() => import('../pages/Maintenance'));
+const Fuel = lazy(() => import('../pages/Fuel'));
+const Expenses = lazy(() => import('../pages/Expenses'));
+const Reports = lazy(() => import('../pages/Reports'));
+const Settings = lazy(() => import('../pages/Settings'));
+const Unauthorized = lazy(() => import('../pages/Unauthorized'));
+
+const SuspenseLoader = () => (
+  <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', minHeight: '200px' }}>
+    <CircularProgress />
+  </Box>
+);
 
 export default function AppRoutes() { return (
   <Router>
-    <Routes>
-      <Route path='/' element={<Landing />} />
+    <Suspense fallback={<SuspenseLoader />}>
+      <Routes>
+        <Route path='/' element={<Landing />} />
       <Route element={<AuthLayout />}>
         <Route path='/login' element={<Login />} />
         <Route path='/forgot-password' element={<ForgotPassword />} />
@@ -41,6 +51,7 @@ export default function AppRoutes() { return (
         <Route path='/unauthorized' element={<Unauthorized />} />
       </Route>
       <Route path='*' element={<PageNotFound />} />
-    </Routes>
+      </Routes>
+    </Suspense>
   </Router>
 ); }

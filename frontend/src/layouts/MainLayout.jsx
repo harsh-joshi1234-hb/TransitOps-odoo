@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import { Box, Toolbar } from '@mui/material';
 import Sidebar from '../components/common/Sidebar';
 import Navbar from '../components/common/Navbar';
+import ErrorBoundary from '../components/common/ErrorBoundary';
 
 const drawerWidth = 260;
 
@@ -38,7 +39,9 @@ export default function MainLayout() {
         }}
       >
         <Toolbar /> {/* Spacer for Navbar */}
-        <Outlet />
+        <ErrorBoundary>
+          <Outlet />
+        </ErrorBoundary>
       </Box>
     </Box>
   );
