@@ -6,3 +6,242 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+// ----------------------------------------------------
+// ENUMS
+// ----------------------------------------------------
+
+enum VehicleStatus {
+  AVAILABLE
+  ON_TRIP
+  IN_SHOP
+  RETIRED
+}
+
+enum DriverStatus {
+  AVAILABLE
+  ON_TRIP
+  OFF_DUTY
+  SUSPENDED
+}
+
+enum TripStatus {
+  DRAFT
+  DISPATCHED
+  COMPLETED
+  CANCELLED
+}
+
+enum MaintenanceStatus {
+  OPEN
+  IN_PROGRESS
+  CLOSED
+  CANCELLED
+}
+
+enum VehicleType {
+  TRUCK
+  VAN
+  REFRIGERATED
+  FLATBED
+  OTHER
+}
+
+enum ExpenseType {
+  TOLL
+  PARKING
+  FINE
+  MAINTENANCE
+  FUEL
+  OTHER
+}
+
+// ----------------------------------------------------
+// MODELS
+// ----------------------------------------------------
+
+model Role {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  
+  // Relations
+  users       User[]
+
+  // Audit
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("roles")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  firstName String
+  lastName  String
+  isActive  Boolean  @default(true)
+  
+  // Relations
+  roleId    String
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+  // Audit
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([email])
+  @@index([roleId])
+  @@map("users")
+}
+
+model Vehicle {
+  id                 String        @id @default(uuid())
+  registrationNumber String        @unique
+  name               String
+  model              String
+  type               VehicleType
+  maxLoadCapacity    Float         // In kg or tons
+  odometer           Float         @default(0) // Current mileage
+  acquisitionCost    Float
+  status             VehicleStatus @default(AVAILABLE)
+  
+  // Soft Delete
+  isDeleted          Boolean       @default(false)
+
+  // Relations
+  trips              Trip[]
+  maintenanceLogs    Maintenance[]
+  fuelLogs           FuelLog[]
+  expenses           Expense[]
+
+  // Audit
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  @@index([status])
+  @@index([registrationNumber])
+  @@map("vehicles")
+}
+
+model Driver {
+  id                 String       @id @default(uuid())
+  name               String
+  licenseNumber      String       @unique
+  licenseCategory    String
+  licenseExpiryDate  DateTime
+  contactNumber      String
+  safetyScore        Float        @default(100.0)
+  status             DriverStatus @default(AVAILABLE)
+
+  // Soft Delete
+  isDeleted          Boolean      @default(false)
+
+  // Relations
+  trips              Trip[]
+
+  // Audit
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  @@index([status])
+  @@index([licenseNumber])
+  @@map("drivers")
+}
+
+model Trip {
+  id              String     @id @default(uuid())
+  source          String
+  destination     String
+  cargoWeight     Float
+  plannedDistance Float
+  status          TripStatus @default(DRAFT)
+  
+  // Relations
+  vehicleId       String
+  vehicle         Vehicle    @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
+  
+  driverId        String
+  driver          Driver     @relation(fields: [driverId], references: [id], onDelete: Restrict)
+
+  expenses        Expense[]
+
+  // Realized Metrics
+  actualDistance  Float?
+  startTime       DateTime?
+  endTime         DateTime?
+
+  // Audit
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@index([status])
+  @@index([vehicleId])
+  @@index([driverId])
+  @@map("trips")
+}
+
+model Maintenance {
+  id          String            @id @default(uuid())
+  description String
+  cost        Float             @default(0.0)
+  startDate   DateTime          @default(now())
+  endDate     DateTime?
+  status      MaintenanceStatus @default(OPEN)
+  
+  // Relations
+  vehicleId   String
+  vehicle     Vehicle           @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  // Audit
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@index([vehicleId])
+  @@index([status])
+  @@map("maintenance_logs")
+}
+
+model FuelLog {
+  id        String   @id @default(uuid())
+  liters    Float
+  cost      Float
+  date      DateTime @default(now())
+  
+  // Relations
+  vehicleId String
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  // Audit
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([vehicleId])
+  @@index([date])
+  @@map("fuel_logs")
+}
+
+model Expense {
+  id          String      @id @default(uuid())
+  type        ExpenseType
+  amount      Float
+  date        DateTime @default(now())
+  description String?
+  
+  // Relations
+  vehicleId   String?
+  vehicle     Vehicle? @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+
+  tripId      String?
+  trip        Trip?    @relation(fields: [tripId], references: [id], onDelete: SetNull)
+
+  // Audit
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([vehicleId])
+  @@index([tripId])
+  @@index([date])
+  @@map("expenses")
+}
