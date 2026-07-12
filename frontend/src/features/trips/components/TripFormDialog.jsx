@@ -99,7 +99,7 @@ export default function TripFormDialog({ open, onClose, onSubmit, initialData, i
                     helperText={errors.vehicleId?.message}
                     disabled={isLoadingVehicles}
                   >
-                    {vehiclesData?.data?.map(v => (
+                    {vehiclesData?.vehicles?.map(v => (
                       <MenuItem key={v.id} value={v.id}>{v.registrationNumber}</MenuItem>
                     )) || <MenuItem value="">Loading...</MenuItem>}
                   </TextField>
@@ -120,7 +120,7 @@ export default function TripFormDialog({ open, onClose, onSubmit, initialData, i
                     helperText={errors.driverId?.message}
                     disabled={isLoadingDrivers}
                   >
-                    {driversData?.data?.map(d => (
+                    {driversData?.drivers?.map(d => (
                       <MenuItem key={d.id} value={d.id}>{d.firstName} {d.lastName}</MenuItem>
                     )) || <MenuItem value="">Loading...</MenuItem>}
                   </TextField>

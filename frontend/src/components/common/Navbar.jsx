@@ -40,7 +40,7 @@ export default function Navbar({ drawerWidth, handleDrawerToggle }) {
         backgroundImage: 'none',
       }}
     >
-      <Toolbar sx={{ minHeight: '56px !important', px: { xs: 2, sm: 3 } }}>
+      <Toolbar sx={{ minHeight: '64px !important', px: { xs: 2, sm: 3 } }}>
         <IconButton
           color="inherit"
           aria-label="open drawer"
@@ -63,7 +63,7 @@ export default function Navbar({ drawerWidth, handleDrawerToggle }) {
             ),
           }}
           sx={{
-            width: { xs: 180, sm: 280 },
+            width: { xs: 180, sm: 320 },
             '& .MuiOutlinedInput-root': {
               height: 36,
               backgroundColor: 'rgba(255, 255, 255, 0.04)',
